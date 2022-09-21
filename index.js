@@ -1,39 +1,35 @@
 (() => {
   
-  console.log('STARTING');
-  console.log(document.currentScript);
+  console.log('Script Init');
 
-  function getParams(script_name) {
-    // Find all script tags
+  // Obtenemos el merchant name y la API KEY
+  const currentScriptProcessed = document.currentScript;
+  const merchantNameFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('merchantName');
+  const merchantApiKeyFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('apiKey');
 
-    var scripts = document.getElementsByTagName("script");
-    
-    // Look through them trying to find ourselves
+  console.log('Merchant Name from Script: ', merchantNameFromScript);
+  console.log('API Key: ',merchantApiKeyFromScript);
 
-    for(var i=0; i<scripts.length; i++) {
-      if(scripts[i].src.indexOf("/" + script_name) > -1) {
-        // Get an array of key=value strings of params
+  // Comprobamos nombre del merchant según la url
+  const TLDs = ["ac", "ad", "ae", "aero", "af", "ag", "ai", "al", "am", "an", "ao", "aq", "ar", "arpa", "as", "asia", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "biz", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bv", "bw", "by", "bz", "ca", "cat", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "com", "coop", "cr", "cu", "cv", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec", "edu", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm", "fo", "fr", "ga", "gb", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gov", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "info", "int", "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jobs", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mg", "mh", "mil", "mk", "ml", "mm", "mn", "mo", "mobi", "mp", "mq", "mr", "ms", "mt", "mu", "museum", "mv", "mw", "mx", "my", "mz", "na", "name", "nc", "ne", "net", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om", "org", "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "pro", "ps", "pt", "pw", "py", "qa", "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sj", "sk", "sl", "sm", "sn", "so", "sr", "st", "su", "sv", "sy", "sz", "tc", "td", "tel", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tp", "tr", "travel", "tt", "tv", "tw", "tz", "ua", "ug", "uk", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "xxx", "ye", "yt", "za", "zm", "zw"].join();
 
-        var pa = scripts[i].src.split("?").pop().split("&");
+  function getDomain(url){
+    var parts = url.split('.');
+    if (parts[0] === 'www' && parts[1] !== 'com'){
+      parts.shift()
+    }
+    var ln = parts.length, i = ln, minLength = parts[parts.length-1].length, part
 
-        // Split each key=value into array, the construct js object
-
-        var p = {};
-        for(var j=0; j<pa.length; j++) {
-          var kv = pa[j].split("=");
-          p[kv[0]] = kv[1];
-        }
-        return p;
+    while(part = parts[--i]){
+      if (i === 0 || i < ln-2 || part.length < minLength || TLDs.indexOf(part) < 0){
+        return part
       }
     }
-    
-    // No scripts match
-
-    return {};
   }
 
-  let pepe = getParams('cruwi');
-  console.log(pepe);
-  alert('1.0.6');
+  let merchantNameFromUrl = getDomain(location.host)
+  console.log('Merchant Name from URL: ',merchantNameFromUrl);
 
-})()
+  console.log('1.0.7');
+
+})();
