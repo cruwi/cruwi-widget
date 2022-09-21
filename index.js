@@ -29,8 +29,8 @@
     return {};
   }
 
-  let pepe = getParams(cruwi);
+  let pepe = getParams('cruwi');
   console.log(pepe);
-  alert('1.0.4');
+  alert('1.0.5');
 
 })()
