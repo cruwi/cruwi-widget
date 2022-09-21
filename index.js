@@ -1,1 +1,3 @@
-alert('Hola');
+(() => {
+  alert('Hola');
+})();
