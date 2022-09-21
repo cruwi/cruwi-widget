@@ -33,16 +33,49 @@
   if(widgetElement) {
     const widgetType = widgetElement.dataset.cruwiWidgetType;
     if(widgetType === 'pdp') {
-      alert('es pdp');
+      buildPDPWidget();
     } else if(widgetType === 'section') {
-      alert('es section');
+      buildSectionWidget();
     } else if(widgetType === 'checkout') {
-      alert('es checkout');
+      buildCheckoutWidget();
     } else {
-      console.error('This type does not exists');
+      console.error('This widget type does not exists');
     }
   } else {
-    console.error('There is no widget to show');
+    console.error('There is no CRUWI widget to show');
+  }
+
+  // Función que monta el PDP Widget
+  function buildPDPWidget() {
+    console.log('-- Building PDP Widget --');
+    
+    // Creamos el Div con el banner
+    const cruwiPDPWidget = document.createElement('div');
+    cruwiPDPWidget.classList.add('cruwi-pdp-widget');
+    cruwiPDPWidget.innerHTML = 'Post on TikTok and earn cash';
+    widgetElement.appendChild(cruwiPDPWidget);
+    injectCruwiStyles();
+  }
+
+  // Función que monta la sección completa
+  function buildSectionWidget() {
+    console.log('-- Building Section Widget --');
+  }
+
+  // Función que monta el widget del checkout
+  function buildCheckoutWidget() {
+    console.log('-- Building Checkout Widget --');
+  }
+
+  function injectCruwiStyles() {
+    const cruwiStyleTag = document.createElement('style');
+    document.head.append(cruwiStyleTag);
+    cruwiStyleTag.innerHTML = `
+      .cruwi-pdp-widget {
+        background-color: red;
+        color: white;
+      }
+    `
   }
 
 })();
