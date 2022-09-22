@@ -1,6 +1,6 @@
 {
   "name": "cruwi-widget",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "JavaScript CRUWI Widget",
   "main": "index.js",
   "scripts": {
