@@ -106,7 +106,7 @@ function colorLog(message, color) {
       <div class="cruwi-pdp-widget-wrapper">
         <div class="cruwi-pdp-widget-logo-wrapper">
           <div class="cruwi-pdp-widget-logo">
-            <img src="https://uploads-ssl.webflow.com/62ea5c239bacb85550bf44ea/6328573bad60f760ac2b5fbb_CRUWI%20(3).svg" alt="CRUWI Logo Banner" >
+            <img class="cruwi-pdp-widget-logo-img" src="https://uploads-ssl.webflow.com/62ea5c239bacb85550bf44ea/6328573bad60f760ac2b5fbb_CRUWI%20(3).svg" alt="CRUWI Logo Banner" >
           </div>
         </div>
         <div class="cruwi-pdp-widget-text">
@@ -349,11 +349,11 @@ function colorLog(message, color) {
         height: 35px;
       }
 
-      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper .cruwi-pdp-widget-logo img {
+      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper .cruwi-pdp-widget-logo .cruwi-pdp-widget-logo-img {
         width: 80px !important;
       }
 
-      #cruwi-pdp-widget .cruwi-pdp-widget-text {
+      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-text {
         font-size: 14px;
         max-width: 260px;
       }
@@ -420,14 +420,19 @@ function colorLog(message, color) {
         text-align: center;
         line-height: 1.2;
         font-family: 'DM Sans', sans-serif;
+        color: black !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-info {
         margin: 0;
         padding: 0;
         margin-top: 15px;
+        font-size: 16px !important;
         text-align: center;
         font-family: 'DM Sans', sans-serif;
+        color: black !important;
+        letter-spacing: 0px;
+        line-height: 1.4;
       }
 
       #cruwiModal .cruwi-modal-body-content-how {
@@ -464,6 +469,9 @@ function colorLog(message, color) {
       #cruwiModal .cruwi-modal-body-content-step-text {
         font-family: 'DM Sans', sans-serif;
         font-weight: 400;
+        font-size: 16px !important;
+        color: black !important;
+        line-height: normal !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-subtitle {
@@ -473,6 +481,8 @@ function colorLog(message, color) {
         line-height: 1.2;
         max-width: 350px;
         margin: 30px auto 10px auto;
+        font-family: 'DM Sans', sans-serif;
+        color: black !important;
       }
       
       #cruwiModal .cruwi-modal-footer {
