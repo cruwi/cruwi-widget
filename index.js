@@ -100,6 +100,7 @@ function colorLog(message, color) {
 
     // Creamos el Div con el banner
     const cruwiPDPWidget = document.createElement('div');
+    cruwiPDPWidget.id = "cruwi-pdp-widget";
     cruwiPDPWidget.classList.add('cruwi-pdp-widget');
     cruwiPDPWidget.innerHTML = `
       <div class="cruwi-pdp-widget-wrapper">
@@ -312,7 +313,7 @@ function colorLog(message, color) {
     document.head.append(cruwiStyleTag);
     cruwiStyleTag.innerHTML = `
 
-      .cruwi-pdp-widget {
+      #cruwi-pdp-widget {
         background-color: white;
         transition: 0.3s;
         color: #111;
@@ -324,35 +325,35 @@ function colorLog(message, color) {
         cursor: pointer;
       }
 
-      .cruwi-pdp-widget:hover {
+      #cruwi-pdp-widget:hover {
         background-color: #EBD0FF;
       }
 
-      .cruwi-pdp-widget-wrapper {
+      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper {
         display: flex;
         justify-content: center;
         align-items: center;
       }
 
-      .cruwi-pdp-widget-logo-wrapper {
+      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper {
         background-color: #EBD0FF;
         padding: 5px 12px;
         border-radius: 8px;
         margin-right: 10px;
       }
 
-      .cruwi-pdp-widget-logo {
+      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper .cruwi-pdp-widget-logo {
         display: flex;
         justify-content: center;
         align-items: center;
         height: 35px;
       }
 
-      .cruwi-pdp-widget-logo img {
+      #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper .cruwi-pdp-widget-logo img {
         width: 80px !important;
       }
 
-      .cruwi-pdp-widget-text {
+      #cruwi-pdp-widget .cruwi-pdp-widget-text {
         font-size: 14px;
         max-width: 260px;
       }
@@ -383,12 +384,12 @@ function colorLog(message, color) {
         overflow: hidden;
       }
       
-      .cruwi-modal-header {
+      #cruwiModal .cruwi-modal-header {
         padding: 10px 15px;
         border-bottom: 1px solid #ebe5e5;
       }
       
-      .cruwi-modal-title {
+      #cruwiModal .cruwi-modal-title {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -396,23 +397,23 @@ function colorLog(message, color) {
         align-items: center;
       }
 
-      .cruwi-modal-logo {
+      #cruwiModal .cruwi-modal-logo {
         width: 25px;
       }
       
-      .cruwi-modal-close-button {
+      #cruwiModal .cruwi-modal-close-button {
         cursor: pointer;
         border: none;
         width: 20px;
         height: 20px;
       }
       
-      .cruwi-modal-body {
+      #cruwiModal .cruwi-modal-body {
         padding: 24px;
         font-family: 'DM Sans', sans-serif;
       }
 
-      .cruwi-modal-body-content-title {
+      #cruwiModal .cruwi-modal-body-content-title {
         margin: 0;
         padding: 0;
         font-size: 28px;
@@ -421,7 +422,7 @@ function colorLog(message, color) {
         font-family: 'DM Sans', sans-serif;
       }
 
-      .cruwi-modal-body-content-info {
+      #cruwiModal .cruwi-modal-body-content-info {
         margin: 0;
         padding: 0;
         margin-top: 15px;
@@ -429,7 +430,7 @@ function colorLog(message, color) {
         font-family: 'DM Sans', sans-serif;
       }
 
-      .cruwi-modal-body-content-how {
+      #cruwiModal .cruwi-modal-body-content-how {
         margin: 0;
         padding: 0;
         width: fit-content;
@@ -440,32 +441,32 @@ function colorLog(message, color) {
         background: #FFFFF2;
       }
 
-      .cruwi-modal-body-content-how-text {}
+      #cruwiModal .cruwi-modal-body-content-how-text {}
 
-      .cruwi-modal-body-content-steps {
+      #cruwiModal .cruwi-modal-body-content-steps {
         margin: 0;
         padding: 0;
         margin-top: 15px;
       }
 
-      .cruwi-modal-body-content-step {
+      #cruwiModal .cruwi-modal-body-content-step {
         display: flex;
         align-items: center;
         max-width: 400px;
         margin: 0 auto 15px auto;
       }
 
-      .cruwi-modal-body-content-step-icon {
+      #cruwiModal .cruwi-modal-body-content-step-icon {
         padding: 20px;
         font-size: 25px;
       }
 
-      .cruwi-modal-body-content-step-text {
+      #cruwiModal .cruwi-modal-body-content-step-text {
         font-family: 'DM Sans', sans-serif;
         font-weight: 400;
       }
 
-      .cruwi-modal-body-content-subtitle {
+      #cruwiModal .cruwi-modal-body-content-subtitle {
         padding: 0;
         font-size: 22px;
         text-align: center;
@@ -474,13 +475,13 @@ function colorLog(message, color) {
         margin: 30px auto 10px auto;
       }
       
-      .cruwi-modal-footer {
+      #cruwiModal .cruwi-modal-footer {
         border-top: 1px solid #ebe5e5;
         padding: 3px;
         margin-top: auto;
       }
 
-      .cruwi-modal-footer-wrapper {
+      #cruwiModal .cruwi-modal-footer-wrapper {
         display: flex;
         flex-direction: row;
         justify-content: center;
@@ -488,7 +489,7 @@ function colorLog(message, color) {
         font-family: 'DM Sans', sans-serif;
       }
 
-      .cruwi-modal-footer-wrapper-text {
+      #cruwiModal .cruwi-modal-footer-wrapper-text {
         font-size: 10px;
         font-family: 'DM Sans', sans-serif;
       }
@@ -513,16 +514,16 @@ function colorLog(message, color) {
       }
 
       @media only screen and (min-width: 762px) {
-        .cruwi-modal-body-content-title {
+        #cruwiModal .cruwi-modal-body-content-title {
           font-size: 35px;
         }
-        .cruwi-modal {
+        #cruwiModal {
           width: 500px;
           height: 80%;
           border-radius: 8px;
         }
 
-        .cruwi-modal-header {
+        #cruwiModal .cruwi-modal-header {
           padding: 15px 20px;
         }
       }
