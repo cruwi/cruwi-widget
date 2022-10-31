@@ -351,11 +351,16 @@ function colorLog(message, color) {
 
       #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper .cruwi-pdp-widget-logo .cruwi-pdp-widget-logo-img {
         width: 80px !important;
+        border-radius: 0px !important;
+        margin-bottom: 0 !important;
+        max-width: none !important;
       }
 
       #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-text {
         font-size: 14px;
         max-width: 260px;
+        letter-spacing: 0px !important;
+        line-height: normal !important;
       }
 
       .cruwi-modal {
@@ -446,7 +451,10 @@ function colorLog(message, color) {
         background: #FFFFF2;
       }
 
-      #cruwiModal .cruwi-modal-body-content-how-text {}
+      #cruwiModal .cruwi-modal-body-content-how-text {
+        color: black !important;
+        font-size: 16px !important;
+      }
 
       #cruwiModal .cruwi-modal-body-content-steps {
         margin: 0;
