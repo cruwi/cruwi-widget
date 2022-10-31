@@ -176,6 +176,68 @@ function colorLog(message, color) {
     const cruwiModalBody = document.createElement('div');
     cruwiModalBody.classList.add('cruwi-modal-body');
 
+    // Creamos el contenido del cuerpo del modal
+    const cruwiModalBodyContent = document.createElement('div');
+    cruwiModalBodyContent.classList.add('cruwi-modal-body-content');
+    cruwiModalBodyContent.innerHTML = `
+      <div class="cruwi-modal-body-content-wrapper">
+        <h4 class="cruwi-modal-body-content-title">Comparte con amigos y gana por recomendar</h4>
+        <p class="cruwi-modal-body-content-info">
+          Consigue hasta 100% en cashback y accede a descuentos 
+          exclusivos cuando compartas y compres con amigos a 
+          través de tu Cruwi
+        </p>
+        <div class="cruwi-modal-body-content-how">
+          <span class="cruwi-modal-body-content-how-text">¿Cómo funciona?<span>
+        </div>
+        <div class="cruwi-modal-body-content-steps">
+
+          <div class="cruwi-modal-body-content-step">
+            <div class="cruwi-modal-body-content-step-icon">
+              🛍️
+            </div>
+            <div class="cruwi-modal-body-content-step-text">
+              Completa tu pedido como siempre para obtener un link a tu Cruwi Tienda personalizada.
+            </div>
+          </div>
+
+          <div class="cruwi-modal-body-content-step">
+            <div class="cruwi-modal-body-content-step-icon">
+              📲
+            </div>
+            <div class="cruwi-modal-body-content-step-text">
+              Comparte el link de tu Cruwi Tienda con tus amigos para que puedan comprar con descuentos exclusivos.
+            </div>
+          </div>
+
+          <div class="cruwi-modal-body-content-step">
+            <div class="cruwi-modal-body-content-step-icon">
+              🤑
+            </div>
+            <div class="cruwi-modal-body-content-step-text">
+              Obtén hasta un 100% en cashback (directo a tu cuenta) cuando tus amigos compren.
+            </div>
+          </div>
+
+          <div class="cruwi-modal-body-content-step">
+            <div class="cruwi-modal-body-content-step-icon">
+              🤫
+            </div>
+            <div class="cruwi-modal-body-content-step-text">
+              Cuando recibas el pedido, puedes compartir un video en TikTok y ganar 1€ en cashback por cada 1000 views.
+            </div>
+          </div>
+
+        </div>
+        <h4 class="cruwi-modal-body-content-subtitle">
+          Cúrratelo para que tus amigos compren y no paréis de ganar
+        </h4>
+      </div>
+    `;
+
+    // Metemos el contenido en el cuerpo
+    cruwiModalBody.appendChild(cruwiModalBodyContent);
+
     // Metemos el cuerpo en el modal
     cruwiModal.appendChild(cruwiModalBody);
 
@@ -240,7 +302,7 @@ function colorLog(message, color) {
     const link = document.createElement('link');
     link.setAttribute('rel', 'stylesheet');
     link.setAttribute('type', 'text/css');
-    link.setAttribute('href', 'http://fonts.cdnfonts.com/css/proxima-nova-2');
+    link.setAttribute('href', 'http://fonts.cdnfonts.com/css/dm-sans');
     document.getElementsByTagName('head')[0].appendChild(link);
   }
 
@@ -252,13 +314,18 @@ function colorLog(message, color) {
 
       .cruwi-pdp-widget {
         background-color: white;
+        transition: 0.3s;
         color: #111;
         display: inline-block;
-        font-family: 'Proxima Nova', sans-serif !important;
+        font-family: 'DM Sans', sans-serif;
         border: 1px solid #EBD0FF;
         border-radius: 8px;
         padding: 8px;
         cursor: pointer;
+      }
+
+      .cruwi-pdp-widget:hover {
+        background-color: #EBD0FF;
       }
 
       .cruwi-pdp-widget-wrapper {
@@ -298,12 +365,11 @@ function colorLog(message, color) {
         transition: 10ms ease-in-out;
         border-radius: 0px;
         width: 100%;
-        max-width: 100%;
+        height: 100%;
         background-color: white;
         box-shadow: 1px 1px 20px #0000001c;
         font-family: 'Poppins', sans-serif;
         z-index: 999999;
-        min-height: 100%;
         overflow: auto;
         display: flex;
         flex-direction: column;
@@ -320,19 +386,6 @@ function colorLog(message, color) {
       .cruwi-modal-header {
         padding: 10px 15px;
         border-bottom: 1px solid #ebe5e5;
-      }
-
-      @media only screen and (min-width: 992px) {
-        .cruwi-modal {
-          width: 600px;
-          max-width: 90%;
-          min-height: 80vh;
-          border-radius: 10px
-        }
-
-        .cruwi-modal-header {
-          padding: 15px 20px;
-        }
       }
       
       .cruwi-modal-title {
@@ -355,7 +408,70 @@ function colorLog(message, color) {
       }
       
       .cruwi-modal-body {
-        padding: 10px 20px 10px 20px;
+        padding: 24px;
+        font-family: 'DM Sans', sans-serif;
+      }
+
+      .cruwi-modal-body-content-title {
+        margin: 0;
+        padding: 0;
+        font-size: 28px;
+        text-align: center;
+        line-height: 1.2;
+        font-family: 'DM Sans', sans-serif;
+      }
+
+      .cruwi-modal-body-content-info {
+        margin: 0;
+        padding: 0;
+        margin-top: 15px;
+        text-align: center;
+        font-family: 'DM Sans', sans-serif;
+      }
+
+      .cruwi-modal-body-content-how {
+        margin: 0;
+        padding: 0;
+        width: fit-content;
+        border: 1px solid #EBD0FF;
+        margin: 20px auto 0 auto;
+        padding: 4px 16px;
+        border-radius: 8px;
+        background: #FFFFF2;
+      }
+
+      .cruwi-modal-body-content-how-text {}
+
+      .cruwi-modal-body-content-steps {
+        margin: 0;
+        padding: 0;
+        margin-top: 15px;
+      }
+
+      .cruwi-modal-body-content-step {
+        display: flex;
+        align-items: center;
+        max-width: 400px;
+        margin: 0 auto 15px auto;
+      }
+
+      .cruwi-modal-body-content-step-icon {
+        padding: 20px;
+        font-size: 25px;
+      }
+
+      .cruwi-modal-body-content-step-text {
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 400;
+      }
+
+      .cruwi-modal-body-content-subtitle {
+        padding: 0;
+        font-size: 22px;
+        text-align: center;
+        line-height: 1.2;
+        max-width: 350px;
+        margin: 30px auto 10px auto;
       }
       
       .cruwi-modal-footer {
@@ -369,11 +485,12 @@ function colorLog(message, color) {
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        font-family: 'Proxima Nova', sans-serif;
+        font-family: 'DM Sans', sans-serif;
       }
 
       .cruwi-modal-footer-wrapper-text {
         font-size: 10px;
+        font-family: 'DM Sans', sans-serif;
       }
 
       #cruwi-modal-overlay {
@@ -393,6 +510,21 @@ function colorLog(message, color) {
         opacity: 1;
         pointer-events: all;
         display: block !important;
+      }
+
+      @media only screen and (min-width: 762px) {
+        .cruwi-modal-body-content-title {
+          font-size: 35px;
+        }
+        .cruwi-modal {
+          width: 500px;
+          height: 80%;
+          border-radius: 8px;
+        }
+
+        .cruwi-modal-header {
+          padding: 15px 20px;
+        }
       }
     `
   }
