@@ -1,13 +1,52 @@
+// Custom color logger
+function colorLog(message, color) {
+  color = color || "black";
+  switch (color) {
+    case "success":  
+      color = "Green"; 
+      break;
+    case "info":     
+      color = "DodgerBlue";  
+      break;
+    case "error":   
+      color = "Red";     
+      break;
+    case "warning":  
+      color = "Orange";   
+      break;
+    default: 
+      color = color;
+  }
+  console.log("%c" + message, "color:" + color);
+}
+
+// Main Script function
 (() => {
   
-  console.log('Cruwi Script Init');
+  // Iniciamos el script
+  colorLog('***** Cruwi Script Init *****', "warning");
 
-  // Obtenemos el merchant name y la API KEY
-  const currentScriptProcessed = document.currentScript;
-  console.log(currentScriptProcessed);
+  // Testeo en local
+  let isLocalDevelopment = window.document.location.hostname === '127.0.0.1';
+
+  // Procesamos el script
+  let currentScriptProcessed;
+  if(isLocalDevelopment) {
+    const testScript = document.createElement('script');
+    testScript.setAttribute('src','https://unpkg.com/cruwi-widget@1.0.11/index.js?merchantName=matchaandco&apiKey=1234567890&widgetType=pdp');
+    currentScriptProcessed = testScript;
+  } else {
+    currentScriptProcessed = document.currentScript;
+  }
+  
+  // Obtenemos los datos del merchant por la url del script
   const merchantNameFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('merchantName');
   const merchantApiKeyFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('apiKey');
   const widgetTypeFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('widgetType');
+
+  colorLog(`Merchant: ${merchantNameFromScript}`, "info");
+  colorLog(`Api Key: ${merchantApiKeyFromScript}`, "success");
+  colorLog(`Widget Type: ${widgetTypeFromScript}`, "success");
 
   // Comprobamos nombre del merchant según la url
   const TLDs = ["ac", "ad", "ae", "aero", "af", "ag", "ai", "al", "am", "an", "ao", "aq", "ar", "arpa", "as", "asia", "at", "au", "aw", "ax", "az", "ba", "bb", "bd", "be", "bf", "bg", "bh", "bi", "biz", "bj", "bm", "bn", "bo", "br", "bs", "bt", "bv", "bw", "by", "bz", "ca", "cat", "cc", "cd", "cf", "cg", "ch", "ci", "ck", "cl", "cm", "cn", "co", "com", "coop", "cr", "cu", "cv", "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec", "edu", "ee", "eg", "er", "es", "et", "eu", "fi", "fj", "fk", "fm", "fo", "fr", "ga", "gb", "gd", "ge", "gf", "gg", "gh", "gi", "gl", "gm", "gn", "gov", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy", "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "im", "in", "info", "int", "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jobs", "jp", "ke", "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz", "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv", "ly", "ma", "mc", "md", "me", "mg", "mh", "mil", "mk", "ml", "mm", "mn", "mo", "mobi", "mp", "mq", "mr", "ms", "mt", "mu", "museum", "mv", "mw", "mx", "my", "mz", "na", "name", "nc", "ne", "net", "nf", "ng", "ni", "nl", "no", "np", "nr", "nu", "nz", "om", "org", "pa", "pe", "pf", "pg", "ph", "pk", "pl", "pm", "pn", "pr", "pro", "ps", "pt", "pw", "py", "qa", "re", "ro", "rs", "ru", "rw", "sa", "sb", "sc", "sd", "se", "sg", "sh", "si", "sj", "sk", "sl", "sm", "sn", "so", "sr", "st", "su", "sv", "sy", "sz", "tc", "td", "tel", "tf", "tg", "th", "tj", "tk", "tl", "tm", "tn", "to", "tp", "tr", "travel", "tt", "tv", "tw", "tz", "ua", "ug", "uk", "us", "uy", "uz", "va", "vc", "ve", "vg", "vi", "vn", "vu", "wf", "ws", "xxx", "ye", "yt", "za", "zm", "zw"].join();
@@ -25,16 +64,22 @@
     }
   }
 
-  let merchantNameFromUrl = getDomain(location.host);
+  // Obtenemos el nombre del merchant oficial
+  let merchantNameFromUrl = getDomain(isLocalDevelopment ? 'matchaandco.com' : window.location.host);
+  colorLog(`Merchant Name: ${merchantNameFromUrl}`, "success");
 
-  // Obtenemos el documento completo
+  // Obtenemos el documento completo (para montar HTML luego)
   const body = document.querySelector('body');
 
   // Comprobamos si hay widget y qué tipo de widget se solicita
   const widgetElement = document.querySelector('[data-cruwi-widget-type]');
 
   if(widgetElement) {
+
+    // Obtenemos el tipo de widget que hay en la página
     const widgetType = widgetElement.dataset.cruwiWidgetType;
+
+    // Según sea el tipo montamos
     if(widgetType === 'pdp') {
       buildCruwiModal();
       buildCruwiPDPWidget();
@@ -45,13 +90,13 @@
     } else {
       console.error('This widget type does not exists');
     }
+
   } else {
-    console.error('There is no CRUWI widget to show');
+    console.error('There is no CRUWI widget to display.');
   }
 
   // Función que monta el PDP Widget
   function buildCruwiPDPWidget() {
-    console.log('-- Building PDP Widget --');
 
     // Creamos el Div con el banner
     const cruwiPDPWidget = document.createElement('div');
@@ -70,11 +115,11 @@
         <span style="margin-left: 3px">Post on TikTok, <b>get paid.</b><b style="font-size: 0.75em; margin-left: 3px"><u>Sign up</u></b></span>
       </div>
     `;
+
     widgetElement.appendChild(cruwiPDPWidget);
 
     // Escuchamos el click
     cruwiPDPWidget.addEventListener('click', () => {
-      console.log('PDP Banner Clicked');
       let event = new CustomEvent("cruwiModalOpen", { bubbles: true });
       cruwiPDPWidget.dispatchEvent(event);
     });
@@ -95,7 +140,6 @@
 
   // Función que monta el modal
   function buildCruwiModal() {
-    console.log('-- Building Cruwi Modal --');
 
     // Creamos el modal con un ID
     const cruwiModal = document.createElement('div');
@@ -148,18 +192,8 @@
 
     const cruwiModalFooterWrapperText = document.createElement('div');
     cruwiModalFooterWrapperText.classList.add('cruwi-modal-footer-wrapper-text');
-    cruwiModalFooterWrapperText.insertAdjacentText('beforeend', 'Powered by');
+    cruwiModalFooterWrapperText.insertAdjacentText('beforeend', 'Powered by CRUWI');
     cruwiModalFooterWrapper.appendChild(cruwiModalFooterWrapperText);
-
-    const cruwiModalFooterWrapperImage = document.createElement('div');
-    cruwiModalFooterWrapperImage.classList.add('cruwi-modal-footer-wrapper-image');
-    cruwiModalFooterWrapper.appendChild(cruwiModalFooterWrapperImage);
-
-    const cruwiModalFooterWrapperImageLogo = document.createElement('img');
-    cruwiModalFooterWrapperImageLogo.setAttribute('src', 'https://uploads-ssl.webflow.com/62ea5c239bacb85550bf44ea/6328573bad60f760ac2b5fbb_CRUWI%20(3).svg');
-    cruwiModalFooterWrapperImageLogo.setAttribute('width', '28');
-    cruwiModalFooterWrapperImageLogo.setAttribute('alt', 'Powered by cruwi.com');
-    cruwiModalFooterWrapper.appendChild(cruwiModalFooterWrapperImageLogo);
     
     // Metemos el footer en el modal
     cruwiModal.appendChild(cruwiModalFooter);
@@ -235,14 +269,14 @@
         left: 50%;
         transform: translate(-50%, -50%) scale(0);
         transition: 10ms ease-in-out;
-        border-radius: 8px;
-        width: 500px;
-        max-width: 90%;
+        border-radius: 0px;
+        width: 100%;
+        max-width: 100%;
         background-color: white;
         box-shadow: 1px 1px 20px #0000001c;
         font-family: 'Poppins', sans-serif;
         z-index: 999999;
-        min-height: 90vh;
+        min-height: 100%;
         overflow: auto;
         display: flex;
         flex-direction: column;
@@ -262,6 +296,13 @@
       }
 
       @media only screen and (min-width: 992px) {
+        .cruwi-modal {
+          width: 600px;
+          max-width: 90%;
+          min-height: 80vh;
+          border-radius: 10px
+        }
+
         .cruwi-modal-header {
           padding: 15px 20px;
         }
@@ -276,14 +317,14 @@
       }
 
       .cruwi-modal-logo {
-        width: 16px;
+        width: 25px;
       }
       
       .cruwi-modal-close-button {
         cursor: pointer;
         border: none;
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
       }
       
       .cruwi-modal-body {
@@ -306,15 +347,6 @@
 
       .cruwi-modal-footer-wrapper-text {
         font-size: 10px;
-        margin-right: 3px;
-      }
-
-      .cruwi-modal-footer-wrapper-image {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        margin-top: 1px;
       }
 
       #cruwi-modal-overlay {
@@ -333,6 +365,7 @@
       #cruwi-modal-overlay.cruwi-modal-overlay-active {
         opacity: 1;
         pointer-events: all;
+        display: block !important;
       }
     `
   }
