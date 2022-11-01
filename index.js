@@ -33,7 +33,7 @@ function colorLog(message, color) {
   let currentScriptProcessed;
   if(isLocalDevelopment) {
     const testScript = document.createElement('script');
-    testScript.setAttribute('src','https://unpkg.com/cruwi-widget@1.0.11/index.js?merchantName=matchaandco&apiKey=1234567890&widgetType=checkout');
+    testScript.setAttribute('src','https://unpkg.com/cruwi-widget?merchantName=matchaandco&apiKey=1234567890&widgetType=checkout');
     currentScriptProcessed = testScript;
   } else {
     currentScriptProcessed = document.currentScript;
@@ -135,12 +135,15 @@ function colorLog(message, color) {
   // Función que monta el widget del checkout
   async function buildCruwiCheckoutWidget() {
 
+    // Comprobamos que exista el objeto Shopify
+    if(!window.Shopify) return;
+
     // Get main data from shopify checkout
     let shop = Shopify.shop;
     let orderId = Shopify.checkout.order_id;
-    let discountCode = Shopify.checkout.discount ? Shopify.checkout.discount.code : null;
+    let discountCode = Shopify.checkout.discount ? Shopify.checkout.discount.code : '';
     let lineItems = Shopify.checkout.line_items;
-    let isCruwiDiscount = discountCode && discountCode.slice(0, 3) === 'CCB';
+    let isCruwiDiscount = Boolean(discountCode && discountCode.slice(0, 3) === 'CCB');
 
     console.table(
       shop,
@@ -150,20 +153,32 @@ function colorLog(message, color) {
       isCruwiDiscount
     )
 
-    // Creamos el Div principal del checkout (izquierda)
-    const cruwiCheckoutMainWidget = document.createElement('div');
-    cruwiCheckoutMainWidget.id = "cruwi-checkout-main-widget";
-    cruwiCheckoutMainWidget.classList.add('cruwi-checkout-main-widget');
+    // Probamos
+    try {
+      const shopData = await fetchShopDataAndCampaign(shop);
 
-    const shopData = await fetchShopDataAndCampaign();
+      // Creamos el Div principal del checkout (izquierda)
+      const cruwiCheckoutMainWidget = document.createElement('div');
+      cruwiCheckoutMainWidget.id = "cruwi-checkout-main-widget";
+      cruwiCheckoutMainWidget.classList.add('cruwi-checkout-main-widget');
 
-    cruwiCheckoutMainWidget.innerHTML = `
-      <div class="cruwi-checkout-main-widget-content">
-        número ${shopData.error.code} ${orderId}
-      </div>
-    `;
+      cruwiCheckoutMainWidget.innerHTML = `
+        <div class="cruwi-checkout-main-widget-content">
+          número ${shopData.error.code} ${orderId}
+        </div>
+      `;
 
-    widgetElement.appendChild(cruwiCheckoutMainWidget);
+      widgetElement.appendChild(cruwiCheckoutMainWidget);
+
+      loadCruwiCustomFont();
+      injectCruwiStyles();
+
+      // Sino sale bloqueamos
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+
   }
 
   // Función que monta el modal
@@ -574,14 +589,23 @@ function colorLog(message, color) {
           padding: 15px 20px;
         }
       }
+
+      #cruwi-checkout-main-widget {
+        border: 1px solid;
+      }
+
     `
   }
 
   // Funciones de api
-  async function fetchShopDataAndCampaign() {
-    const response = await fetch('https://app.cruwi.com/v1/api/merchants');
-    const movies = await response.json();
-    return movies;
+  async function fetchShopDataAndCampaign(shop) {
+    const resp = await fetch(`https://app.cruwi.com/v1/api/merchants/${shop}`);
+    if (resp.status === 200) {
+      const shopData = await resp.json();
+      return shopData;
+    } else {
+      throw Error('No se pudo pedir los datos del merchant');
+    }
   }
 
 })();
