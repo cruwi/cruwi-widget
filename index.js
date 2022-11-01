@@ -626,6 +626,7 @@ function colorLog(message, color) {
         border-radius: 8px;
         border-top: 3px solid #000;
         border-bottom: 3px solid #EBD0FF;
+        margin-top: 40px;
       }
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content {
