@@ -133,8 +133,37 @@ function colorLog(message, color) {
   }
 
   // Función que monta el widget del checkout
-  function buildCruwiCheckoutWidget() {
-    
+  async function buildCruwiCheckoutWidget() {
+
+    // Get main data from shopify checkout
+    let shop = Shopify.shop;
+    let orderId = Shopify.checkout.order_id;
+    let discountCode = Shopify.checkout.discount ? Shopify.checkout.discount.code : null;
+    let lineItems = Shopify.checkout.line_items;
+    let isCruwiDiscount = discountCode && discountCode.slice(0, 3) === 'CCB';
+
+    console.table(
+      shop,
+      orderId,
+      discountCode,
+      lineItems,
+      isCruwiDiscount
+    )
+
+    // Creamos el Div principal del checkout (izquierda)
+    const cruwiCheckoutMainWidget = document.createElement('div');
+    cruwiCheckoutMainWidget.id = "cruwi-checkout-main-widget";
+    cruwiCheckoutMainWidget.classList.add('cruwi-checkout-main-widget');
+
+    const shopData = await fetchShopDataAndCampaign();
+
+    cruwiCheckoutMainWidget.innerHTML = `
+      <div class="cruwi-checkout-main-widget-content">
+        número ${shopData.error.code} ${orderId}
+      </div>
+    `;
+
+    widgetElement.appendChild(cruwiCheckoutMainWidget);
   }
 
   // Función que monta el modal
@@ -546,6 +575,13 @@ function colorLog(message, color) {
         }
       }
     `
+  }
+
+  // Funciones de api
+  async function fetchShopDataAndCampaign() {
+    const response = await fetch('https://app.cruwi.com/v1/api/merchants');
+    const movies = await response.json();
+    return movies;
   }
 
 })();
