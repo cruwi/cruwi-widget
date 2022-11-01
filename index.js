@@ -164,7 +164,7 @@ function colorLog(message, color) {
 
       cruwiCheckoutMainWidget.innerHTML = `
         <div class="cruwi-checkout-main-widget-content">
-          número ${shopData.error.code} ${orderId}
+          número ${JSON.stringify(shopData.data[0])}
         </div>
       `;
 
