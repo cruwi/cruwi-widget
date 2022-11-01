@@ -145,17 +145,19 @@ function colorLog(message, color) {
     let lineItems = Shopify.checkout.line_items;
     let isCruwiDiscount = Boolean(discountCode && discountCode.slice(0, 3) === 'CCB');
 
-    console.table(
-      shop,
-      orderId,
-      discountCode,
-      lineItems,
-      isCruwiDiscount
-    )
-
-    // Probamos
+    console.table(shop, orderId, discountCode, lineItems, isCruwiDiscount);
+    
     try {
+
+      // Nos traemos la información necesaria del merchant ()
+      // Campaña que tiene activa y vemos el criterio o los productos
+      // si hay match, mandamos crear la url de mini tienda
+
       const shopData = await fetchShopDataAndCampaign(shop);
+
+      // Mandamos los datos del pedido y cliente actuales
+
+      // Mostramos el botón de ver mi mini tienda
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -164,7 +166,23 @@ function colorLog(message, color) {
 
       cruwiCheckoutMainWidget.innerHTML = `
         <div class="cruwi-checkout-main-widget-content">
-          número ${JSON.stringify(shopData.data[0])}
+          <div class="marquee running js-marquee"> 
+            <div class="marquee-inner"> 
+              <span>GANA CASHBACK</span> 
+            </div>
+          </div>
+          <h5 class="cruwi-checkout-main-widget-content-title">
+            Invita a amigos y consigue que tu pedido te salga gratis
+          </h5>
+          <p class="cruwi-checkout-main-widget-content-info">
+            Con tu compra en <b>Magneet</b> has desbloqueado una mini tienda 
+            personalizada con descuentos que te permitirá ganar dinero cuando un amigo 
+            compre a través de ella. ¡Podrás recuperar hasta el 100% del
+            importe de tu compra!
+          </p>
+          <a target="_blank" href="google.es" class="cruwi-checkout-main-widget-content-button">
+            ACCEDE A TU TIENDA
+          </a>
         </div>
       `;
 
@@ -173,7 +191,14 @@ function colorLog(message, color) {
       loadCruwiCustomFont();
       injectCruwiStyles();
 
-      // Sino sale bloqueamos
+      document.querySelectorAll('.js-marquee').forEach(function(e) {
+        var letter = e.querySelector('span');
+        for (counter = 1; counter <= 3; ++counter) {
+            var clone = letter.cloneNode(true);
+            letter.after(clone);
+        }
+      })
+
     } catch (error) {
       console.log(error);
       return;
@@ -356,6 +381,12 @@ function colorLog(message, color) {
     const cruwiStyleTag = document.createElement('style');
     document.head.append(cruwiStyleTag);
     cruwiStyleTag.innerHTML = `
+
+      :root {
+        --offset: 20vw;
+        --move-initial: calc(-25% + var(--offset));
+        --move-final: calc(-50% + var(--offset));
+      }
 
       #cruwi-pdp-widget {
         background-color: white;
@@ -591,7 +622,95 @@ function colorLog(message, color) {
       }
 
       #cruwi-checkout-main-widget {
-        border: 1px solid;
+        box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+        border-radius: 8px;
+        border-top: 3px solid #000;
+        border-bottom: 3px solid #EBD0FF;
+      }
+
+      #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content {
+        text-align: center;
+      }
+
+      #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-title {
+        padding: 0;
+        padding: 0 16px;
+        margin: 10px 0 0 0;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 25px;
+        text-align: center;
+      }
+
+      #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-info {
+        padding: 0;
+        padding: 0 16px;
+        margin: 20px 0 0 0;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 16px;
+        line-height: 1.4;
+        text-align: center;
+      }
+
+      #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-button {
+        padding: 0;
+        margin: 20px auto;
+        box-shadow: inset 0px -1px 0px 0px #571a57;
+        background-color: #fffff2;
+        border-radius: 8px;
+        border: 2px solid #080008;
+        display: inline-block;
+        cursor: pointer;
+        color: #000000;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 12px 40px;
+        text-decoration: none;
+      }
+
+      .marquee {
+        background: black;
+        color: white;
+        transition: all 0.5s;
+        font-family: sans-serif;
+        font-size: 16px;
+        font-line-height: 60%;
+        font-weight: bold;
+        text-transform: uppercase;
+        overflow: hidden;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+      }
+
+      .marquee.running .marquee-inner {
+        animation-play-state: running;
+      }
+
+      .marquee:hover .marquee-inner {
+        animation-play-state: running;
+      }
+
+      .marquee span {
+        padding: 0 6vw;
+        white-space: nowrap;
+      }
+      
+      .marquee-inner {
+        width: fit-content;
+        display: flex;
+        position: relative;
+        transform: translate3d(var(--move-initial), 0, 0);
+        animation: marquee 3s linear infinite;
+        animation-play-state: paused;
+      }
+      
+      @keyframes marquee {
+        0% {
+          transform: translateX(var(--move-initial));
+        }
+        100% {
+          transform: translateX(var(--move-final));
+        }
       }
 
     `
