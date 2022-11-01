@@ -33,7 +33,7 @@ function colorLog(message, color) {
   let currentScriptProcessed;
   if(isLocalDevelopment) {
     const testScript = document.createElement('script');
-    testScript.setAttribute('src','https://unpkg.com/cruwi-widget@1.0.11/index.js?merchantName=matchaandco&apiKey=1234567890&widgetType=pdp');
+    testScript.setAttribute('src','https://unpkg.com/cruwi-widget@1.0.11/index.js?merchantName=matchaandco&apiKey=1234567890&widgetType=checkout');
     currentScriptProcessed = testScript;
   } else {
     currentScriptProcessed = document.currentScript;
@@ -134,7 +134,7 @@ function colorLog(message, color) {
 
   // Función que monta el widget del checkout
   function buildCruwiCheckoutWidget() {
-    console.log('-- Building Checkout Widget --');
+    
   }
 
   // Función que monta el modal
