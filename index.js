@@ -153,17 +153,18 @@ function colorLog(message, color) {
     
     try {
 
-      // Nos traemos la información necesaria del merchant (brandName, isActive, logoUrl)
-      // campaña que tiene activa y vemos el criterio o los productos
-      // si hay match, mandamos crear la url de mini tienda
+      // Pedimos los datos de la tienda y de la campaña que tenga activa
+      const { brandName, isActive, logoUrl, merchantUrl, campaigns } = await fetchGetMerchantAndCampaignData(shop);
+      console.log(isActive, merchantUrl);
+      if(!isActive) return;
 
-      const shopData = await fetchMerchantAndCampaignData(shop);
-      console.log(shopData);
+      // Comprobamos que el pedido tenga producto de la campaña activa (EL MATCH)
 
       // Mandamos los datos del pedido y cliente actuales
+      const cruwiData = await fetchPostClientData(Shopify.checkout, shop);
+      console.log(cruwiData);
 
-      // Mostramos el botón de ver mi mini tienda
-      // le ponemos la url de la tienda creada
+      // En la respuesta de lo anterior, ponemos el enlace a la cruwi tienda
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -744,12 +745,12 @@ function colorLog(message, color) {
     `
   }
 
-  // Funciones de api (hacerlo con POST)
-  async function fetchMerchantAndCampaignData(shop) {
+  // Trae la información del merchant y de la campaña actual activa
+  async function fetchGetMerchantAndCampaignData(shop) {
 
     const data = {
       merchantUrl: shop,
-      apyKey: '123456789'
+      apyKey: merchantApiKeyFromScript
     }
 
     const resp = await fetch(`https://app.cruwi.com/v1/api/merchants/public/getMerchantAndCampaignData`, { 
@@ -763,6 +764,33 @@ function colorLog(message, color) {
     if (resp.status === 200) {
       const shopData = await resp.json();
       return shopData;
+
+    } else {
+      throw Error('No se pudo pedir los datos del merchant');
+    }
+  }
+
+  // Envía los datos del cliente y el pedido y crea su mini tienda
+  async function fetchPostClientData(checkoutData, shop) {
+
+    const dataToSend = {
+      data: {
+        checkout: checkoutData,
+        shop
+      }
+    }
+
+    const resp = await fetch(`https://app.cruwi.com/v1/api/clients`, { 
+      method: 'POST',
+      body: JSON.stringify(dataToSend),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (resp.status === 200) {
+      const cruwiShopData = await resp.json();
+      return cruwiShopData;
 
     } else {
       throw Error('No se pudo pedir los datos del merchant');
