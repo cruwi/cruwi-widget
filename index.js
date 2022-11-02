@@ -622,10 +622,9 @@ function colorLog(message, color) {
       }
 
       #cruwi-checkout-main-widget {
-        box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+        border: 1px solid #d9d9d9;
         border-radius: 8px;
         border-top: 3px solid #000;
-        border-bottom: 3px solid #EBD0FF;
         margin-top: 40px;
       }
 
@@ -635,21 +634,24 @@ function colorLog(message, color) {
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-title {
         padding: 0;
-        padding: 0 16px;
         margin: 10px 0 0 0;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 25px;
-        text-align: center;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 25px !important;
+        text-align: center !important;
+        line-height: 1.3 !important;
+        font-weight: bold !important;
+        color: black !important;
       }
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-info {
         padding: 0;
         padding: 0 16px;
         margin: 20px 0 0 0;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 16px;
-        line-height: 1.4;
-        text-align: center;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 16px !important;
+        line-height: 1.4 !important;
+        text-align: center !important;
+        color: black !important;
       }
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-button {
@@ -662,9 +664,9 @@ function colorLog(message, color) {
         display: inline-block;
         cursor: pointer;
         color: #000000;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 16px;
-        font-weight: bold;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
         padding: 12px 40px;
         text-decoration: none;
       }
