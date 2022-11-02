@@ -154,7 +154,7 @@ function colorLog(message, color) {
     try {
 
       // Pedimos los datos de la tienda y de la campaña que tenga activa
-      const { brandName, isActive, logoUrl, merchantUrl, campaigns } = await fetchGetMerchantAndCampaignData(shop);
+      const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns } } = await fetchGetMerchantAndCampaignData(shop);
       console.log(isActive, merchantUrl);
       if(!isActive) return;
 
