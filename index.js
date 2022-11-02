@@ -113,6 +113,7 @@ function colorLog(message, color) {
           Comparte con amigos y consigue hasta el 100% de cashback
         </div>
       </div>
+      <div class="cruwi-pdp-widget-button">Saber más</div>
     `;
 
     widgetElement.appendChild(cruwiPDPWidget);
@@ -389,14 +390,15 @@ function colorLog(message, color) {
       }
 
       #cruwi-pdp-widget {
+        position: relative !important;
         background-color: white;
         transition: 0.3s;
-        color: #111;
+        color: #111 !important;
         display: inline-block;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'DM Sans', sans-serif !important;
         border: 1px solid #EBD0FF;
         border-radius: 8px;
-        padding: 8px;
+        padding: 8px !important;
         cursor: pointer;
       }
 
@@ -408,6 +410,19 @@ function colorLog(message, color) {
         display: flex;
         justify-content: center;
         align-items: center;
+      }
+
+      #cruwi-pdp-widget .cruwi-pdp-widget-button {
+        position: absolute !important;
+        bottom: 0;
+        right: 0;
+        font-size: 10px !important;
+        font-weight: bold !important;
+        letter-spacing: 0px !important;
+        background: #eeeeee !important;
+        padding: 3px 10px !important;
+        border-top-left-radius: 8px !important;
+        border-bottom-right-radius: 8px !important;
       }
 
       #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-logo-wrapper {
@@ -432,8 +447,8 @@ function colorLog(message, color) {
       }
 
       #cruwi-pdp-widget .cruwi-pdp-widget-wrapper .cruwi-pdp-widget-text {
-        font-size: 14px;
-        max-width: 260px;
+        font-size: 14px !important;
+        max-width: 260px !important;
         letter-spacing: 0px !important;
         line-height: normal !important;
       }
@@ -496,10 +511,10 @@ function colorLog(message, color) {
       #cruwiModal .cruwi-modal-body-content-title {
         margin: 0;
         padding: 0;
-        font-size: 28px;
+        font-size: 28px !important;
         text-align: center;
-        line-height: 1.2;
-        font-family: 'DM Sans', sans-serif;
+        line-height: 1.2 !important;
+        font-family: 'DM Sans', sans-serif !important;
         color: black !important;
       }
 
@@ -509,10 +524,10 @@ function colorLog(message, color) {
         margin-top: 15px;
         font-size: 16px !important;
         text-align: center;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'DM Sans', sans-serif !important;
         color: black !important;
-        letter-spacing: 0px;
-        line-height: 1.4;
+        letter-spacing: 0px !important;
+        line-height: 1.4 !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-how {
@@ -529,6 +544,7 @@ function colorLog(message, color) {
       #cruwiModal .cruwi-modal-body-content-how-text {
         color: black !important;
         font-size: 16px !important;
+        letter-spacing: 0px !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-steps {
@@ -555,6 +571,7 @@ function colorLog(message, color) {
         font-size: 16px !important;
         color: black !important;
         line-height: normal !important;
+        letter-spacing: 0px !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-subtitle {
