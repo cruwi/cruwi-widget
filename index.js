@@ -150,20 +150,20 @@ function colorLog(message, color) {
     let discountCode = Shopify.checkout.discount ? Shopify.checkout.discount.code : '';
     let lineItems = Shopify.checkout.line_items;
     let isCruwiDiscount = Boolean(discountCode && discountCode.slice(0, 3) === 'CCB');
-
-    console.table(shop, orderId, discountCode, lineItems, isCruwiDiscount);
     
     try {
 
-      // Nos traemos la información necesaria del merchant ()
-      // Campaña que tiene activa y vemos el criterio o los productos
+      // Nos traemos la información necesaria del merchant (brandName, isActive, logoUrl)
+      // campaña que tiene activa y vemos el criterio o los productos
       // si hay match, mandamos crear la url de mini tienda
 
-      const shopData = await fetchShopDataAndCampaign(shop);
+      const shopData = await fetchMerchantAndCampaignData(shop);
+      console.log(shopData);
 
       // Mandamos los datos del pedido y cliente actuales
 
       // Mostramos el botón de ver mi mini tienda
+      // le ponemos la url de la tienda creada
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -197,6 +197,7 @@ function colorLog(message, color) {
       loadCruwiCustomFont();
       injectCruwiStyles();
 
+      // Marquee
       document.querySelectorAll('.js-marquee').forEach(function(e) {
         var letter = e.querySelector('span');
         for (counter = 1; counter <= 3; ++counter) {
@@ -521,6 +522,7 @@ function colorLog(message, color) {
         line-height: 1.2 !important;
         font-family: 'DM Sans', sans-serif !important;
         color: black !important;
+        letter-spacing: 0px !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-info {
@@ -588,6 +590,7 @@ function colorLog(message, color) {
         margin: 30px auto 10px auto;
         font-family: 'DM Sans', sans-serif;
         color: black !important;
+        letter-spacing: 0px !important;
       }
       
       #cruwiModal .cruwi-modal-footer {
@@ -741,12 +744,26 @@ function colorLog(message, color) {
     `
   }
 
-  // Funciones de api
-  async function fetchShopDataAndCampaign(shop) {
-    const resp = await fetch(`https://app.cruwi.com/v1/api/merchants/${shop}`);
+  // Funciones de api (hacerlo con POST)
+  async function fetchMerchantAndCampaignData(shop) {
+
+    const data = {
+      merchantUrl: shop,
+      apyKey: '123456789'
+    }
+
+    const resp = await fetch(`https://app.cruwi.com/v1/api/merchants/public/getMerchantAndCampaignData`, { 
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers:{
+        'Content-Type': 'application/json'
+      }
+    });
+
     if (resp.status === 200) {
       const shopData = await resp.json();
       return shopData;
+
     } else {
       throw Error('No se pudo pedir los datos del merchant');
     }
