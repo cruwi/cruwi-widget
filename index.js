@@ -98,6 +98,11 @@ function colorLog(message, color) {
   // Función que monta el PDP Widget
   function buildCruwiPDPWidget() {
 
+    let widgetText = "Comparte con amigos y consigue hasta 100% de cashback";
+
+    // Vemos el tamaño de pantalla para algunos ajustes en el futuro
+    let windowSize = window.screen.width;
+
     // Creamos el Div con el banner
     const cruwiPDPWidget = document.createElement('div');
     cruwiPDPWidget.id = "cruwi-pdp-widget";
@@ -110,7 +115,7 @@ function colorLog(message, color) {
           </div>
         </div>
         <div class="cruwi-pdp-widget-text">
-          Comparte con amigos y consigue hasta el 100% de cashback
+          ${widgetText}
         </div>
       </div>
       <div class="cruwi-pdp-widget-button">Saber más</div>
@@ -416,11 +421,11 @@ function colorLog(message, color) {
         position: absolute !important;
         bottom: 0;
         right: 0;
-        font-size: 10px !important;
+        font-size: 9px !important;
         font-weight: bold !important;
         letter-spacing: 0px !important;
         background: #eeeeee !important;
-        padding: 3px 10px !important;
+        padding: 2px 10px !important;
         border-top-left-radius: 8px !important;
         border-bottom-right-radius: 8px !important;
       }
