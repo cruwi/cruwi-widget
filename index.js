@@ -145,16 +145,18 @@ function colorLog(message, color) {
     if(!window.Shopify) return;
 
     // Get main data from shopify checkout
-    let shop = Shopify.shop;
+    let shopRawUrl = Shopify.shop;
     let orderId = Shopify.checkout.order_id;
     let discountCode = Shopify.checkout.discount ? Shopify.checkout.discount.code : '';
     let lineItems = Shopify.checkout.line_items;
     let isCruwiDiscount = Boolean(discountCode && discountCode.slice(0, 3) === 'CCB');
+
+    colorLog(`DISCOUNT: ${isCruwiDiscount}`, "info");
     
     try {
 
       // Pedimos los datos de la tienda y de la campaña que tenga activa
-      const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns } } = await fetchGetMerchantAndCampaignData(shop);
+      const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns } } = await fetchGetMerchantAndCampaignData(shopRawUrl);
 
       // Comprobamos que está activo el merchant
       if(!isActive) return;
@@ -167,11 +169,15 @@ function colorLog(message, color) {
         return lineItemsIds.indexOf(product.id) >= 0; 
       });
 
+      colorLog(`MATCHES: ${matches}`, "info");
+
       // Comprobamos el nº de matches (si no hay matches, nada.. no es de la campaña)
       if(matches.length > 0) return;
 
       // Mandamos los datos del pedido y cliente actuales
-      const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matches, shop);
+      const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matches, isCruwiDiscount, shopRawUrl);
+
+      colorLog(`CRUWI SHOP DATA: ${data}`, "info");
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -778,13 +784,14 @@ function colorLog(message, color) {
   }
 
   // Envía los datos del cliente y el pedido y crea su mini tienda
-  async function fetchPostClientData(checkoutData, productMatches,shop) {
+  async function fetchPostClientData(checkoutData, productMatches, isCruwiDiscount, shopRawUrl) {
 
     const dataToSend = {
       data: {
         checkout: checkoutData,
         productMatches,
-        shop
+        isCruwiDiscount,
+        shopRawUrl
       }
     }
 
