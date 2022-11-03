@@ -155,16 +155,23 @@ function colorLog(message, color) {
 
       // Pedimos los datos de la tienda y de la campaña que tenga activa
       const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns } } = await fetchGetMerchantAndCampaignData(shop);
-      console.log(isActive, merchantUrl);
+
+      // Comprobamos que está activo el merchant
       if(!isActive) return;
 
       // Comprobamos que el pedido tenga producto de la campaña activa (EL MATCH)
+      // --> 1º sacar el array de ids de line items
+      // --> 2º filtrar el array de objetos producto con el array de ids
+      let lineItemsIds = lineItems.map(product => product.product_id);
+      let matches = campaigns[0].products.filter(function (product) {
+        return lineItemsIds.indexOf(product.id) >= 0; 
+      });
+
+      // Comprobamos el nº de matches (si no hay matches, nada.. no es de la campaña)
+      if(matches.length > 0) return;
 
       // Mandamos los datos del pedido y cliente actuales
-      const cruwiData = await fetchPostClientData(Shopify.checkout, shop);
-      console.log(cruwiData);
-
-      // En la respuesta de lo anterior, ponemos el enlace a la cruwi tienda
+      const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matches, shop);
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -182,12 +189,12 @@ function colorLog(message, color) {
             Invita a amigos y consigue que tu pedido te salga gratis
           </h5>
           <p class="cruwi-checkout-main-widget-content-info">
-            Con tu compra en <b>Magneet</b> has desbloqueado una mini tienda 
+            Con tu compra en <b>${brandName ? brandName : 'esta tienda'}</b> has desbloqueado una mini tienda 
             personalizada con descuentos que te permitirá ganar dinero cuando un amigo 
             compre a través de ella. ¡Podrás recuperar hasta el 100% del
             importe de tu compra!
           </p>
-          <a target="_blank" href="google.es" class="cruwi-checkout-main-widget-content-button">
+          <a target="_blank" href="${shortUrl}" class="cruwi-checkout-main-widget-content-button">
             ACCEDE A TU TIENDA
           </a>
         </div>
@@ -198,12 +205,12 @@ function colorLog(message, color) {
       loadCruwiCustomFont();
       injectCruwiStyles();
 
-      // Marquee
+      // Marquee logic
       document.querySelectorAll('.js-marquee').forEach(function(e) {
         var letter = e.querySelector('span');
         for (counter = 1; counter <= 3; ++counter) {
-            var clone = letter.cloneNode(true);
-            letter.after(clone);
+          var clone = letter.cloneNode(true);
+          letter.after(clone);
         }
       })
 
@@ -771,11 +778,12 @@ function colorLog(message, color) {
   }
 
   // Envía los datos del cliente y el pedido y crea su mini tienda
-  async function fetchPostClientData(checkoutData, shop) {
+  async function fetchPostClientData(checkoutData, productMatches,shop) {
 
     const dataToSend = {
       data: {
         checkout: checkoutData,
+        productMatches,
         shop
       }
     }
