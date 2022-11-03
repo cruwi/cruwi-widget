@@ -166,11 +166,12 @@ function colorLog(message, color) {
       // --> 2º filtrar el array de objetos producto con el array de ids
       // los productos comprados (line_items) llevan el id sin el prefijo.. lo metemos para el match
       let lineItemsIds = lineItems.map(product => 'gid://shopify/Product/' + product.product_id);
+      console.log(lineItems);
       let matches = campaigns[0].products.filter(function (product) {
         return lineItemsIds.indexOf(product.id) >= 0; 
       });
 
-      colorLog(`MATCHES: ${matches}`, "info");
+      console.log(matches);
 
       // Comprobamos el nº de matches (si no hay matches, nada.. no es de la campaña)
       if(matches.length > 0) return;
