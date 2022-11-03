@@ -178,8 +178,6 @@ function colorLog(message, color) {
       // Mandamos los datos del pedido y cliente actuales
       const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matches, isCruwiDiscount, shopRawUrl);
 
-      colorLog(`CRUWI SHOP DATA: ${data}`, "info");
-
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
       cruwiCheckoutMainWidget.id = "cruwi-checkout-main-widget";
