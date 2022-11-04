@@ -172,8 +172,8 @@ function colorLog(message, color) {
 
       // Cogemos los line items que han tenido match (los datos son mejores para mostrar en la mini tienda)
       let matchesFromLineItems = [];
-      for (let i = 0; i < line_items.length; i++) {
-        const productItem = line_items[i];
+      for (let i = 0; i < lineItems.length; i++) {
+        const productItem = lineItems[i];
         const productItemId = productItem.product_id;
         for (let j = 0; j < matches.length; j++) {
           const matchItem = matches[j];
