@@ -161,33 +161,44 @@ function colorLog(message, color) {
       // Comprobamos que está activo el merchant
       if(!isActive) return;
 
-      // Comprobamos que el pedido tenga producto de la campaña activa (EL MATCH)
-      // --> 1º sacar el array de ids de line items
-      // --> 2º filtrar el array de objetos producto con el array de ids
-      // --> 3º los productos comprados (line_items) llevan el id sin el prefijo.. lo añadimos para el match
-      let lineItemsIds = lineItems.map(product => 'gid://shopify/Product/' + product.product_id);
-      let matches = campaigns[0].products.filter(function (product) {
-        return lineItemsIds.indexOf(product.id) >= 0; 
-      });
+      // Comprobamos que haya campaña (por si hay algún error)
+      if(campaigns.length <= 0) return;
 
-      // Cogemos los line items que han tenido match (los datos son mejores para mostrar en la mini tienda)
+      // Si son todos los productos, no buscamos matches
       let matchesFromLineItems = [];
-      for (let i = 0; i < lineItems.length; i++) {
-        const productItem = lineItems[i];
-        const productItemId = productItem.product_id;
-        for (let j = 0; j < matches.length; j++) {
-          const matchItem = matches[j];
-          if (Number(matchItem.id.replace('gid://shopify/Product/', '')) === productItemId) {
-            matchesFromLineItems.push(productItem);
+      if(campaigns[0].criteria !== 'all') {
+
+        // Comprobamos que el pedido tenga producto de la campaña activa (EL MATCH)
+        // --> 1º sacar el array de ids de line items
+        // --> 2º filtrar el array de objetos producto con el array de ids
+        // --> 3º los productos comprados (line_items) llevan el id sin el prefijo.. lo añadimos para el match
+        let lineItemsIds = lineItems.map(product => 'gid://shopify/Product/' + product.product_id);
+        let matches = campaigns[0].products.filter(function (product) {
+          return lineItemsIds.indexOf(product.id) >= 0; 
+        });
+
+        // Cogemos los line items que han tenido match (los datos son mejores para mostrar en la mini tienda)
+        for (let i = 0; i < lineItems.length; i++) {
+          const productItem = lineItems[i];
+          const productItemId = productItem.product_id;
+          for (let j = 0; j < matches.length; j++) {
+            const matchItem = matches[j];
+            if (Number(matchItem.id.replace('gid://shopify/Product/', '')) === productItemId) {
+              matchesFromLineItems.push(productItem);
+            }
           }
         }
+
+        console.log('MATCHES: ', matches);
+        console.log('FINAL MATCHES: ', matchesFromLineItems);
+
+        // Comprobamos el nº de matches (si no hay matches, nada.. no es de la campaña)
+        if(matches.length === 0) return;
+
+      } else {
+        matchesFromLineItems = lineItems;
+        console.log('TODOS ENTRAN: ', matchesFromLineItems);
       }
-
-      console.log('MATCHES: ', matches);
-      console.log('FINAL MATCHES: ', matchesFromLineItems);
-
-      // Comprobamos el nº de matches (si no hay matches, nada.. no es de la campaña)
-      if(matches.length === 0) return;
 
       // Mandamos los datos del pedido y cliente actuales
       const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl);
