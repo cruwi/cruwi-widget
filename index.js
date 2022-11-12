@@ -201,7 +201,7 @@ function colorLog(message, color) {
       }
 
       // Mandamos los datos del pedido y cliente actuales
-      const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl);
+      const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl, campaigns);
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -808,14 +808,15 @@ function colorLog(message, color) {
   }
 
   // Envía los datos del cliente y el pedido y crea su mini tienda
-  async function fetchPostClientData(checkoutData, productMatches, isCruwiDiscount, shopRawUrl) {
+  async function fetchPostClientData(checkoutData, productMatches, isCruwiDiscount, shopRawUrl, campaigns) {
 
     const dataToSend = {
       data: {
         checkout: checkoutData,
         productMatches,
         isCruwiDiscount,
-        shopRawUrl
+        shopRawUrl,
+        campaign: campaigns[0]
       }
     }
 
