@@ -20,6 +20,8 @@ function colorLog(message, color) {
   console.log("%c" + message, "color:" + color);
 }
 
+const CRUWI_BASE_API_URL = "https://1ef0-2a02-2e02-3a30-5800-96f-e1aa-5ad0-e02c.eu.ngrok.io";
+
 // Main Script function
 (() => {
   
@@ -790,7 +792,7 @@ function colorLog(message, color) {
       apyKey: merchantApiKeyFromScript
     }
 
-    const resp = await fetch(`https://app.cruwi.com/v1/api/merchants/public/getMerchantAndCampaignData`, { 
+    const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/merchants/public/getMerchantAndCampaignData`, { 
       method: 'POST',
       body: JSON.stringify(data),
       headers:{
@@ -820,7 +822,7 @@ function colorLog(message, color) {
       }
     }
 
-    const resp = await fetch(`https://app.cruwi.com/v1/api/clients`, { 
+    const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/clients`, { 
       method: 'POST',
       body: JSON.stringify(dataToSend),
       headers:{
