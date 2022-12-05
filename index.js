@@ -203,7 +203,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       }
 
       // Mandamos los datos del pedido y cliente actuales
-      const { data: { shopData: { shortUrl } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl, campaigns);
+      const { data: { shopData: { shortUrl, url } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl, campaigns);
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -226,7 +226,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
             compre a través de ella. ¡Podrás recuperar hasta el 100% del
             importe de tu compra!
           </p>
-          <a target="_blank" href="${shortUrl}" class="cruwi-checkout-main-widget-content-button">
+          <a target="_blank" href="${url}" class="cruwi-checkout-main-widget-content-button">
             ACCEDE A TU TIENDA
           </a>
         </div>
