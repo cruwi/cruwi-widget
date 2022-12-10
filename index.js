@@ -21,7 +21,7 @@ function colorLog(message, color) {
 }
 
 const CRUWI_BASE_API_URL = "https://app.cruwi.com";
-const CRUWI_BASE_API_URL_STAGING = "https://a869-2a02-2e02-3a30-5800-618c-5c40-b4d0-274d.eu.ngrok.io";
+const CRUWI_BASE_API_URL_STAGING = "https://0f08-2a02-2e02-3a30-5800-f80c-abcd-37f2-4c5.eu.ngrok.io";
 
 // Main Script function
 (() => {
