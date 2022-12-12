@@ -793,7 +793,7 @@ const CRUWI_BASE_API_URL_STAGING = "https://06fd-77-229-188-4.ngrok.io";
       apyKey: merchantApiKeyFromScript
     }
 
-    const resp = await fetch(`${CRUWI_BASE_API_URL_STAGING}/v1/api/merchants/public/getMerchantAndCampaignData`, { 
+    const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/merchants/public/getMerchantAndCampaignData`, { 
       method: 'POST',
       body: JSON.stringify(data),
       headers:{
@@ -823,7 +823,7 @@ const CRUWI_BASE_API_URL_STAGING = "https://06fd-77-229-188-4.ngrok.io";
       }
     }
 
-    const resp = await fetch(`${CRUWI_BASE_API_URL_STAGING}/v1/api/clients`, { 
+    const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/clients`, { 
       method: 'POST',
       body: JSON.stringify(dataToSend),
       headers:{
