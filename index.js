@@ -21,7 +21,6 @@ function colorLog(message, color) {
 }
 
 const CRUWI_BASE_API_URL = "https://app.cruwi.com";
-const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a186-6792.eu.ngrok.io";
 
 // Main Script function
 (() => {
@@ -47,7 +46,7 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
   const merchantApiKeyFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('apiKey');
   const widgetTypeFromScript = new URLSearchParams(new URL(currentScriptProcessed.getAttribute('src')).search).get('widgetType');
 
-  colorLog(`Merchant: ${merchantNameFromScript}`, "info");
+  colorLog(`Merchant: ${merchantNameFromScript}`, "success");
   colorLog(`Api Key: ${merchantApiKeyFromScript}`, "success");
   colorLog(`Widget Type: ${widgetTypeFromScript}`, "success");
 
@@ -68,8 +67,8 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
   }
 
   // Obtenemos el nombre del merchant oficial
-  let merchantNameFromUrl = getDomain(isLocalDevelopment ? 'matchaandco.com' : window.location.host);
-  colorLog(`Merchant Name: ${merchantNameFromUrl}`, "success");
+  let merchantNameFromUrl = getDomain(isLocalDevelopment ? 'cruwi.com' : window.location.host);
+  colorLog(`Merchant Name from URL: ${merchantNameFromUrl}`, "success");
 
   // Obtenemos el documento completo (para montar HTML luego)
   const body = document.querySelector('body');
@@ -91,7 +90,7 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
     } else if(widgetType === 'checkout') {
       buildCruwiCheckoutWidget();
     } else {
-      console.error('This widget type does not exists');
+      console.error('This widget type is not valid');
     }
 
   } else {
@@ -100,6 +99,7 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
 
   // Función que monta el PDP Widget
   function buildCruwiPDPWidget() {
+    console.log('-- Building PDP Widget --');
 
     let widgetText = "Comparte con amigos y consigue hasta 100% de cashback";
 
@@ -139,10 +139,51 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
   // Función que monta la sección completa
   function buildCruwiSectionWidget() {
     console.log('-- Building Section Widget --');
+
+    // Creamos el modal con un ID
+    const sectionWidget = document.createElement('div');
+    sectionWidget.classList.add('cruwi-section');
+    sectionWidget.id = 'cruwiSection';
+    sectionWidget.innerHTML = `
+      <div class="cruwi-section-main">
+
+        <h2 class="cruwi-section-title">¡Te devolvemos parte de tu compra cuando tus amigas compren en ${merchantNameFromScript} contigo!</h2>
+      
+        <div class="cruwi-section-card-container">
+          <div class="cruwi-section-card">
+            <div class="cruwi-section-card-bullet">1</div>
+            <h2>Compra como siempre</h2>
+            <p>Haz tu compra con normalidad, como lo haces siempre</p>
+          </div>
+          <div class="cruwi-section-card">
+            <div class="cruwi-section-card-bullet">2</div>
+            <h2>Invita a amigas</h2>
+            <p>Una vez finalizada tu compra, recibirás un enlace a tu tienda personalizada para que invites a tus amigas</p>
+          </div>
+          <div class="cruwi-section-card">
+            <div class="cruwi-section-card-bullet">3</div>
+            <h2>Recupera tu dinero</h2>
+            <p>Cada vez que una amiga compre te reembolsaremos una parte de tu compra en el método de pago que utilices</p>
+          </div>
+        </div>
+
+        <h2 class="cruwi-section-poweredby">
+          powered by <img width="40" src="https://uploads-ssl.webflow.com/62ea5c239bacb85550bf44ea/6328573bad60f760ac2b5fbb_CRUWI%20(3).svg" alt="Powered by CRUWI.COM" />
+        </h2>
+
+      </div>
+    `
+
+    // Añadimos la section completo al documento
+    document.body.appendChild(sectionWidget);
+
+    loadCruwiCustomFont();
+    injectCruwiStyles();
   }
 
   // Función que monta el widget del checkout
   async function buildCruwiCheckoutWidget() {
+    console.log('-- Building Checkout Widget --');
 
     // Comprobamos que exista el objeto Shopify
     if(!window.Shopify) return;
@@ -159,7 +200,7 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
     try {
 
       // Pedimos los datos de la tienda y de la campaña que tenga activa
-      const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns } } = await fetchGetMerchantAndCampaignData(shopRawUrl);
+      const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns, checkoutWidgetTitle, checkoutWidgetText } } = await fetchGetMerchantAndCampaignData(shopRawUrl);
 
       // Comprobamos que está activo el merchant
       if(!isActive) return;
@@ -219,15 +260,12 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
             </div>
           </div>
           <h5 class="cruwi-checkout-main-widget-content-title">
-            Invita a amigos y consigue que tu pedido te salga gratis
+            ${checkoutWidgetTitle}
           </h5>
           <p class="cruwi-checkout-main-widget-content-info">
-            Con tu compra en <b>${brandName ? brandName : 'esta tienda'}</b> has desbloqueado una mini tienda 
-            personalizada con descuentos que te permitirá ganar dinero cuando un amigo 
-            compre a través de ella. ¡Podrás recuperar hasta el 100% del
-            importe de tu compra!
+            ${checkoutWidgetText}
           </p>
-          <a target="_blank" href="${url}" class="cruwi-checkout-main-widget-content-button">
+          <a target="_blank" href="${url}?owner=true" class="cruwi-checkout-main-widget-content-button">
             ACCEDE A TU TIENDA
           </a>
         </div>
@@ -779,6 +817,92 @@ const CRUWI_BASE_API_URL_STAGING = "https://d3ee-2a02-2e02-3a30-5800-111-3fdc-a1
         }
         100% {
           transform: translateX(var(--move-final));
+        }
+      }
+
+      #cruwiSection .cruwi-section-main {
+        padding: 30px 0;
+        font-family: 'DM Sans', sans-serif !important;
+      }
+
+      #cruwiSection .cruwi-section-title {
+        padding: 0;
+        margin: 0;
+        text-align: center;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 20px !important;
+        line-height: 1.3;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      #cruwiSection .cruwi-section-card-container {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 1200px;
+        justify-content: space-around;
+        margin: 0 auto;
+        margin-top: 30px;
+        margin-bottom: 30px;
+      }
+      
+      #cruwiSection .cruwi-section-card {
+        width: 300px;
+        max-width: 100%;
+        margin: 20px 10px;
+        box-shadow: 0 0px 2px 0 rgba(0, 0, 0, 0.2);
+        transition: 0.3s;
+        padding: 20px;
+        border-radius: 8px;
+        position: relative;
+      }
+
+      #cruwiSection .cruwi-section-card-bullet {
+        position: absolute;
+        top: -18px;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: 35px;
+        height: 35px;
+        background: black;
+        border-radius: 50%;
+        color: white;
+        font-weight: bold;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      #cruwiSection .cruwi-section-card h2 {
+        margin: 0;
+        padding: 0;
+        padding: 10px;
+        text-align: center;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 20px !important;
+      }
+      
+      #cruwiSection .cruwi-section-card p {
+        margin: 0;
+        padding: 0;
+        padding: 10px;
+        text-align: center;
+        max-width: 260px;
+        margin: 0 auto;
+      }
+
+      #cruwiSection .cruwi-section-poweredby {
+        font-size: 12px;
+        text-align: center;
+      }
+
+      @media only screen and (max-width: 768px) {
+
+        #cruwiSection .cruwi-section-card {
+          width: 100%;
         }
       }
 
