@@ -272,7 +272,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
           <p class="cruwi-checkout-main-widget-content-info">
             ${checkoutWidgetText}
           </p>
-          <a target="_blank" href="${url}?owner=true" class="cruwi-checkout-main-widget-content-button">
+          <a target="_blank" href="${url}?o=t" class="cruwi-checkout-main-widget-content-button">
             ACCEDE A TU TIENDA
           </a>
         </div>
