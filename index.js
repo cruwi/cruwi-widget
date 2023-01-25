@@ -28,14 +28,14 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
   // Iniciamos el script
   colorLog('***** Cruwi Script Init *****', "warning");
 
-  // Testeo en local
-  let isLocalDevelopment = window.document.location.hostname === '127.0.0.1';
+  // Testeo en local o en la web de test de CRUWI
+  let isLocalDevelopment = window.document.location.hostname === '127.0.0.1' || window.document.location.hostname === 'cruwishop.myshopify.com';
 
   // Procesamos el script
   let currentScriptProcessed;
   if(isLocalDevelopment) {
     const testScript = document.createElement('script');
-    testScript.setAttribute('src','https://unpkg.com/cruwi-widget?merchantName=matchaandco&apiKey=1234567890&widgetType=checkout');
+    testScript.setAttribute('src','https://unpkg.com/cruwi-widget?merchantName=Cruwishop&apiKey=1234567890&widgetType=pdp');
     currentScriptProcessed = testScript;
   } else {
     currentScriptProcessed = document.currentScript;
@@ -78,6 +78,9 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
   if(widgetElement) {
 
+    // Cargamos amplitude
+    loadAmplitudeSDK();
+
     // Obtenemos el tipo de widget que hay en la página
     const widgetType = widgetElement.dataset.cruwiWidgetType;
 
@@ -95,6 +98,16 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
   } else {
     console.error('There is no CRUWI widget to display.');
+  }
+
+  // Función que carga el SDK de Amplitude
+  function loadAmplitudeSDK() {
+    let projectId = isLocalDevelopment ? '203521c0ed2ec0d7fbe8d1176f8c3503' : 'ae6db858c2fce34e9561b18032893b25';
+    const scriptAmplitude = document.createElement('script');
+    var scriptAmplitudeContent = document.createTextNode(`!function(){"use strict";!function(e,t){var r=e.amplitude||{_q:[],_iq:[]};if(r.invoked)e.console&&console.error&&console.error("Amplitude snippet has been loaded.");else{var n=function(e,t){e.prototype[t]=function(){return this._q.push({name:t,args:Array.prototype.slice.call(arguments,0)}),this}},s=function(e,t,r){return function(n){e._q.push({name:t,args:Array.prototype.slice.call(r,0),resolve:n})}},o=function(e,t,r){e[t]=function(){if(r)return{promise:new Promise(s(e,t,Array.prototype.slice.call(arguments)))}}},i=function(e){for(var t=0;t<g.length;t++)o(e,g[t],!1);for(var r=0;r<m.length;r++)o(e,m[r],!0)};r.invoked=!0;var u=t.createElement("script");u.type="text/javascript",u.integrity="sha384-GHWzi7MsT/TD3t0f+KUaVeuvPUsuVgdUKegrAWlzO4I83+klmUJna8WTuUunlsg6",u.crossOrigin="anonymous",u.async=!0,u.src="https://cdn.amplitude.com/libs/analytics-browser-1.6.6-min.js.gz",u.onload=function(){e.amplitude.runQueuedFunctions||console.log("[Amplitude] Error: could not load SDK")};var a=t.getElementsByTagName("script")[0];a.parentNode.insertBefore(u,a);for(var c=function(){return this._q=[],this},l=["add","append","clearAll","prepend","set","setOnce","unset","preInsert","postInsert","remove","getUserProperties"],p=0;p<l.length;p++)n(c,l[p]);r.Identify=c;for(var d=function(){return this._q=[],this},v=["getEventProperties","setProductId","setQuantity","setPrice","setRevenue","setRevenueType","setEventProperties"],f=0;f<v.length;f++)n(d,v[f]);r.Revenue=d;var g=["getDeviceId","setDeviceId","getSessionId","setSessionId","getUserId","setUserId","setOptOut","setTransport","reset"],m=["init","add","remove","track","logEvent","identify","groupIdentify","setGroup","revenue","flush"];i(r),r.createInstance=function(){var e=r._iq.push({_q:[]})-1;return i(r._iq[e]),r._iq[e]},e.amplitude=r}}(window,document)}(); amplitude.init("${projectId}"); `);
+    scriptAmplitude.appendChild(scriptAmplitudeContent); 
+    let head = document.getElementsByTagName('head')[0];
+    head.appendChild(scriptAmplitude);
   }
 
   // Función que monta el PDP Widget
@@ -135,6 +148,11 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
     // Escuchamos el click
     cruwiPDPWidget.addEventListener('click', () => {
+
+      window.amplitude && amplitude.track('pdp_widget_clicked', {
+        merchantName: merchantNameFromScript,
+      });
+
       let event = new CustomEvent("cruwiModalOpen", { bubbles: true });
       cruwiPDPWidget.dispatchEvent(event);
     });
@@ -251,6 +269,16 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         console.log('TODOS ENTRAN: ', matchesFromLineItems);
       }
 
+      // Si es es un código de CRUWI (viene de mini tienda), mandamos evento a Amplitude
+      if(isCruwiDiscount) {
+        window.amplitude && amplitude.track('purchase_completed', {
+          merchantName: merchantNameFromScript,
+          cruwiCoupon: discountCode,
+          purchasedItems: matchesFromLineItems.map(product => product.product_id),
+          purchaseSize: matchesFromLineItems.length
+        });
+      }
+
       // Mandamos los datos del pedido y cliente actuales
       const { data: { shopData: { shortUrl, url } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl, campaigns);
 
@@ -272,7 +300,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
           <p class="cruwi-checkout-main-widget-content-info">
             ${checkoutWidgetText}
           </p>
-          <a target="_blank" href="${url}?o=t" class="cruwi-checkout-main-widget-content-button">
+          <a id="cruwi-checkout-main-widget-button" target="_blank" href="${url}?o=t" class="cruwi-checkout-main-widget-content-button">
             ACCEDE A TU TIENDA
           </a>
         </div>
@@ -290,7 +318,21 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
           var clone = letter.cloneNode(true);
           letter.after(clone);
         }
-      })
+      });
+
+      const cruwiCheckoutMainWidgetButton = document.getElementById('cruwi-checkout-main-widget-button');
+
+      // Click en el botón para enviar evento a Amplitude
+      cruwiCheckoutMainWidgetButton.addEventListener('click', () => {
+        window.amplitude && amplitude.track('checkout_widget_clicked', {
+          merchantName: merchantNameFromScript,
+        });
+      });
+
+      // Mandamos evento a Amplitude de widget cargado
+      window.amplitude && amplitude.track('checkout_widget_viewed', {
+        merchantName: merchantNameFromScript,
+      });
 
     } catch (error) {
       console.log(error);
