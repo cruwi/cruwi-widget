@@ -31,6 +31,9 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
   // Testeo en local o en la web de test de CRUWI
   let isLocalDevelopment = window.document.location.hostname === '127.0.0.1' || window.document.location.hostname === 'cruwishop.myshopify.com';
 
+  // Detectamos lenguaje del usuario
+  const preferredLanguage = window.navigator.language; // es-ES
+
   // Procesamos el script
   let currentScriptProcessed;
   if(isLocalDevelopment) {
@@ -117,12 +120,17 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     // Comprobamos que estilo quieren (2 estilos hay)
     const widgetTextStyle = widgetElement.dataset.cruwiWidgetStyle ?? '1';
 
-    let widgetText = "Comparte con amigos y consigue hasta 100% de cashback";
+    let widgetText = "Gana dinero recomendando nuestros productos";
 
     if(widgetTextStyle === '2') {
       widgetText = "Comparte con amig@s para que tod@s ganemos";
     }
 
+    // Si el idioma no contiene 'es', ponemos en inglés
+    if(preferredLanguage.indexOf('es') === -1) {
+      widgetText = "Earn money by recommending our products";
+    }
+    
     // Vemos el tamaño de pantalla para algunos ajustes en el futuro
     let windowSize = window.screen.width;
 
@@ -141,7 +149,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
           ${widgetText}
         </div>
       </div>
-      <div class="cruwi-pdp-widget-button">Saber más</div>
+      <div class="cruwi-pdp-widget-button">+ Info</div>
     `;
 
     widgetElement.appendChild(cruwiPDPWidget);
@@ -233,6 +241,22 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       // Comprobamos que haya campaña (por si hay algún error)
       if(campaigns.length <= 0) return;
 
+      // Textos e idioma del widget
+      let checkoutWidgetTitleText = checkoutWidgetTitle;
+      let checkoutWidgetContentText = checkoutWidgetText;
+      let checkoutWidgetRotatingText1 = "GANA DINERO";
+      let checkoutWidgetButton = "ACCEDE A TU TIENDA";
+
+      let isEnglish = false;
+      if(preferredLanguage.indexOf('es') === -1) {
+        isEnglish = true;
+        checkoutWidgetTitleText = "Earn money sharing your purchase";
+        checkoutWidgetContentText = `With your purchase you have unlocked your own ${merchantNameFromScript} store. Share it with friends so they can shop with a discount. For every purchase they make you will earn money directly to your account.`;
+        checkoutWidgetRotatingText1 = "EARN MONEY";
+        checkoutWidgetButton = "ACCESS YOUR STORE";
+      }
+      console.log({isEnglish});
+
       // Si son todos los productos, no buscamos matches
       let matchesFromLineItems = [];
       if(campaigns[0].criteria !== 'all') {
@@ -291,17 +315,17 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         <div class="cruwi-checkout-main-widget-content">
           <div class="marquee running js-marquee"> 
             <div class="marquee-inner"> 
-              <span>GANA CASHBACK</span> 
+              <span>${checkoutWidgetRotatingText1}</span> 
             </div>
           </div>
           <h5 class="cruwi-checkout-main-widget-content-title">
-            ${checkoutWidgetTitle}
+            ${checkoutWidgetTitleText}
           </h5>
           <p class="cruwi-checkout-main-widget-content-info">
-            ${checkoutWidgetText}
+            ${checkoutWidgetContentText}
           </p>
           <a id="cruwi-checkout-main-widget-button" target="_blank" href="${url}?o=t" class="cruwi-checkout-main-widget-content-button">
-            ACCEDE A TU TIENDA
+            ${checkoutWidgetButton}
           </a>
         </div>
       `;
@@ -366,7 +390,6 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
     // Añadimos el logo de Cruwi al header
     const cruwiModalLogo = document.createElement('img');
-    cruwiModalLogo.src = 'https://uploads-ssl.webflow.com/62ea5c239bacb85550bf44ea/6324b93495448d6d49194864_Frame%201%20(2).png';
     cruwiModalLogo.classList.add('cruwi-modal-logo');
     cruwiModalTitleDiv.appendChild(cruwiModalLogo);
     cruwiModalHeader.appendChild(cruwiModalTitleDiv);
@@ -387,26 +410,45 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     // Creamos el contenido del cuerpo del modal
     const cruwiModalBodyContent = document.createElement('div');
     cruwiModalBodyContent.classList.add('cruwi-modal-body-content');
+
+    // Textos para poner en el idioma del navegador del usuario
+    let modalTitleText;
+    let modalHowItWorksText;
+    let modalFirstStepText;
+    let modalSecondStepText;
+    let modalThirdStepText;
+    let modalAclarationText;
+
+    if(preferredLanguage.indexOf('es') !== -1) {
+      modalTitleText = "Gana dinero recomendando nuestros productos";
+      modalHowItWorksText = "¿Cómo funciona?";
+      modalFirstStepText = "Realiza una compra como siempre";
+      modalSecondStepText = `Conseguirás un enlace a tu propia tienda de ${merchantNameFromScript} con descuentos exclusivos`;
+      modalThirdStepText = "Compártelo y gana dinero* cada vez que alguien compre a través de tu enlace";
+      modalAclarationText = "*El dinero lo recibirás automáticamente en el método de pago que utilices en tu compra";
+    } else {
+      modalTitleText = "Earn money by recommending our products";
+      modalHowItWorksText = "How does it work?";
+      modalFirstStepText = "Make a purchase as always";
+      modalSecondStepText = `You will get a link to your own ${merchantNameFromScript} store with exclusive discounts`;
+      modalThirdStepText = "Share it and earn money* every time someone buys through your link";
+      modalAclarationText = "*You will automatically receive the money in the payment method you use for your purchase";
+    }
+
     // TODO: mejorar las opciones
     cruwiModalBodyContent.innerHTML = `
       <div class="cruwi-modal-body-content-wrapper">
+
         <h4 class="cruwi-modal-body-content-title">
-          ${
-            widgetTextStyle === '2' ? 
-            ('Si compartes, ganamos tod@s') : 
-            ('Comparte con amigos y gana por recomendar')
-          }
+          ${modalTitleText}
         </h4>
-        <p class="cruwi-modal-body-content-info">
-          ${
-            widgetTextStyle === '2' ? 
-            ('Queremos recompensarte por compartir nuestra marca con tus amigos. Queremos que el beneficio de las RRSS sea tuyo.') : 
-            ('Consigue hasta 100% en cashback y accede a descuentos exclusivos cuando compartas y compres con amigos a través de tu Cruwi.')
-          }
-        </p>
+
         <div class="cruwi-modal-body-content-how">
-          <span class="cruwi-modal-body-content-how-text">¿Cómo funciona?<span>
+          <span class="cruwi-modal-body-content-how-text">
+            ${modalHowItWorksText}
+          <span>
         </div>
+
         <div class="cruwi-modal-body-content-steps">
 
           <div class="cruwi-modal-body-content-step">
@@ -414,7 +456,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
               🛍️
             </div>
             <div class="cruwi-modal-body-content-step-text">
-              Completa tu pedido como siempre para obtener un link a tu Cruwi Tienda personalizada.
+              ${modalFirstStepText}
             </div>
           </div>
 
@@ -423,7 +465,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
               📲
             </div>
             <div class="cruwi-modal-body-content-step-text">
-              Comparte el link con tus amigos para que puedan comprar con descuentos exclusivos.
+              ${modalSecondStepText}
             </div>
           </div>
 
@@ -432,23 +474,16 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
               🤑
             </div>
             <div class="cruwi-modal-body-content-step-text">
-              Gana dinero cada vez que alguien compre a través de tu tienda. Recibirás el dinero en el método de pago que utilices para tu compra.
+              ${modalThirdStepText}
             </div>
           </div>
 
-          <div class="cruwi-modal-body-content-step">
-            <div class="cruwi-modal-body-content-step-icon">
-              🤫
-            </div>
-            <div class="cruwi-modal-body-content-step-text">
-              Cuando recibas el pedido, puedes compartir una reseña en vídeo en TikTok y ganar aún más.
-            </div>
+          <div class="cruwi-modal-body-content-disclaimer">
+            ${modalAclarationText}
           </div>
 
         </div>
-        <h4 class="cruwi-modal-body-content-subtitle">
-          Cúrratelo para que tus amigos compren y no paréis de ganar
-        </h4>
+
       </div>
     `;
 
@@ -608,8 +643,8 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         transform: translate(-50%, -50%) scale(0);
         transition: 10ms ease-in-out;
         border-radius: 0px;
-        width: 100%;
-        height: 100%;
+        width: 90%;
+        height: 70%;
         background-color: white;
         box-shadow: 1px 1px 20px #0000001c;
         font-family: 'Poppins', sans-serif;
@@ -617,6 +652,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         overflow: auto;
         display: flex;
         flex-direction: column;
+        border-radius: 8px;
       }
       
       .cruwi-modal.cruwi-modal-active {
@@ -653,30 +689,18 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       
       #cruwiModal .cruwi-modal-body {
         padding: 24px;
-        font-family: 'DM Sans', sans-serif;
+        font-family: 'DM Sans', sans-serif !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-title {
         margin: 0;
         padding: 0;
-        font-size: 28px !important;
-        text-align: center;
+        font-size: 22px !important;
+        text-align: center !important;
         line-height: 1.2 !important;
         font-family: 'DM Sans', sans-serif !important;
         color: black !important;
         letter-spacing: 0px !important;
-      }
-
-      #cruwiModal .cruwi-modal-body-content-info {
-        margin: 0;
-        padding: 0;
-        margin-top: 15px;
-        font-size: 16px !important;
-        text-align: center;
-        font-family: 'DM Sans', sans-serif !important;
-        color: black !important;
-        letter-spacing: 0px !important;
-        line-height: 1.4 !important;
       }
 
       #cruwiModal .cruwi-modal-body-content-how {
@@ -692,7 +716,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
       #cruwiModal .cruwi-modal-body-content-how-text {
         color: black !important;
-        font-size: 16px !important;
+        font-size: 14px !important;
         letter-spacing: 0px !important;
       }
 
@@ -709,6 +733,10 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         margin: 0 auto 15px auto;
       }
 
+      #cruwiModal .cruwi-modal-body-content-step:first-child {
+        margin: 0 auto 2px auto;
+      }
+
       #cruwiModal .cruwi-modal-body-content-step-icon {
         padding: 20px;
         font-size: 25px;
@@ -723,15 +751,13 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         letter-spacing: 0px !important;
       }
 
-      #cruwiModal .cruwi-modal-body-content-subtitle {
-        padding: 0;
-        font-size: 22px;
-        text-align: center;
-        line-height: 1.2;
-        max-width: 350px;
-        margin: 30px auto 10px auto;
-        font-family: 'DM Sans', sans-serif;
+      #cruwiModal .cruwi-modal-body-content-disclaimer {
+        margin: 20px auto 0 auto !important;
+        max-width: 280px !important;
+        text-align: center !important;
+        font-size: 12px !important;
         color: black !important;
+        line-height: normal !important;
         letter-spacing: 0px !important;
       }
       
@@ -777,14 +803,19 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         #cruwiModal .cruwi-modal-body-content-title {
           font-size: 35px;
         }
+
         #cruwiModal {
-          width: 500px;
-          height: 80%;
+          width: 400px;
+          height: 75%;
           border-radius: 8px;
         }
 
         #cruwiModal .cruwi-modal-header {
           padding: 15px 20px;
+        }
+
+        #cruwiModal .cruwi-modal-body-content-steps {
+          margin-top: 0;
         }
       }
 
@@ -1013,7 +1044,8 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         productMatches,
         isCruwiDiscount,
         shopRawUrl,
-        campaign: campaigns[0]
+        campaign: campaigns[0],
+        preferredLanguage
       }
     }
 
