@@ -130,7 +130,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     if(preferredLanguage.indexOf('es') === -1) {
       widgetText = "Earn money by recommending our products";
     }
-    
+
     // Vemos el tamaño de pantalla para algunos ajustes en el futuro
     let windowSize = window.screen.width;
 
@@ -227,8 +227,10 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     let discountCode = Shopify.checkout.discount ? Shopify.checkout.discount.code : '';
     let lineItems = Shopify.checkout.line_items;
     let isCruwiDiscount = Boolean(discountCode && discountCode.slice(0, 3) === 'CCB');
+    let isCruwiPartnerDiscount = Boolean(discountCode && discountCode.slice(0, 3) === 'CCP');
 
     colorLog(`DISCOUNT: ${isCruwiDiscount}`, "info");
+    colorLog(`DISCOUNT: ${isCruwiPartnerDiscount}`, "info");
     
     try {
 
@@ -294,7 +296,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       }
 
       // Si es es un código de CRUWI (viene de mini tienda), mandamos evento a Amplitude
-      if(isCruwiDiscount) {
+      if(isCruwiDiscount || isCruwiPartnerDiscount) {
         window.amplitude && amplitude.track('purchase_completed', {
           merchantName: merchantNameFromScript,
           cruwiCoupon: discountCode,
@@ -304,7 +306,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       }
 
       // Mandamos los datos del pedido y cliente actuales
-      const { data: { shopData: { shortUrl, url } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, shopRawUrl, campaigns);
+      const { data: { shopData: { shortUrl, url } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, isCruwiPartnerDiscount, shopRawUrl, campaigns);
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -723,7 +725,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       #cruwiModal .cruwi-modal-body-content-steps {
         margin: 0;
         padding: 0;
-        margin-top: 15px;
+        margin-top: 5px;
       }
 
       #cruwiModal .cruwi-modal-body-content-step {
@@ -1036,13 +1038,14 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
   }
 
   // Envía los datos del cliente y el pedido y crea su mini tienda
-  async function fetchPostClientData(checkoutData, productMatches, isCruwiDiscount, shopRawUrl, campaigns) {
+  async function fetchPostClientData(checkoutData, productMatches, isCruwiDiscount, isCruwiPartnerDiscount, shopRawUrl, campaigns) {
 
     const dataToSend = {
       data: {
         checkout: checkoutData,
         productMatches,
         isCruwiDiscount,
+        isCruwiPartnerDiscount,
         shopRawUrl,
         campaign: campaigns[0],
         preferredLanguage
