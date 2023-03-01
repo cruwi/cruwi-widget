@@ -221,6 +221,10 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     // Comprobamos que exista el objeto Shopify
     if(!window.Shopify) return;
 
+    // Si no está en españa, no renderiamos (Fooga, Arze, etc)
+    const customerCountry = Shopify.checkout.billing_address.country_code;
+    if(customerCountry !== 'ES') return;
+
     // Get main data from shopify checkout
     let shopRawUrl = Shopify.shop;
     let orderId = Shopify.checkout.order_id;
