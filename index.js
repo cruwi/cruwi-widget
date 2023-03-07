@@ -30,15 +30,17 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
   // Testeo en local o en la web de test de CRUWI
   let isLocalDevelopment = window.document.location.hostname === '127.0.0.1' || window.document.location.hostname === 'cruwishop.myshopify.com';
+  let isTestNow = false;
 
   // Detectamos lenguaje del usuario
   const preferredLanguage = window.navigator.language; // es-ES
+  colorLog(`Preferred Language: ${preferredLanguage}`, "success");
 
   // Procesamos el script
   let currentScriptProcessed;
   if(isLocalDevelopment) {
     const testScript = document.createElement('script');
-    testScript.setAttribute('src','https://unpkg.com/cruwi-widget?merchantName=Cruwishop&apiKey=1234567890&widgetType=pdp');
+    testScript.setAttribute('src','https://unpkg.com/cruwi-widget?merchantName=Cruwishop&apiKey=42ce241171fce799168ed5faa01dd3b2&widgetType=checkout');
     currentScriptProcessed = testScript;
   } else {
     currentScriptProcessed = document.currentScript;
@@ -80,7 +82,6 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
   const widgetElement = document.querySelector('[data-cruwi-widget-type]');
 
   if(widgetElement) {
-
     // Cargamos amplitude
     loadAmplitudeSDK();
 
@@ -93,6 +94,9 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       buildCruwiPDPWidget();
     } else if(widgetType === 'section') {
       buildCruwiSectionWidget();
+    } else if(widgetType === 'tiktok') {
+      loadTiktokScript();
+      buildCruwiTiktokWidget();
     } else if(widgetType === 'checkout') {
       buildCruwiCheckoutWidget();
     } else {
@@ -113,9 +117,18 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     head.appendChild(scriptAmplitude);
   }
 
+  // Función que carga TikTok
+  function loadTiktokScript() {
+    const script = document.createElement('link');
+    script.setAttribute('src', 'https://www.tiktok.com/embed.js');
+    script.setAttribute('async', true);
+    let head = document.getElementsByTagName('head')[0];
+    head.appendChild(script);
+  }
+
   // Función que monta el PDP Widget
   function buildCruwiPDPWidget() {
-    console.log('-- Building PDP Widget --');
+    colorLog('-- Building PDP Widget --', "info");
 
     // Comprobamos que estilo quieren (2 estilos hay)
     const widgetTextStyle = widgetElement.dataset.cruwiWidgetStyle ?? '1';
@@ -169,9 +182,93 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     injectCruwiStyles();
   }
 
+  // Función que monta el PDP Widget
+  async function buildCruwiTiktokWidget() {
+    colorLog('-- Building Tiktok Widget --', "info");
+
+    // Vemos el tamaño de pantalla
+    let windowSize = window.screen.width;
+
+    // Obtenemos los favoritos de ese merchant
+    const { data } = await fetchGetFavouriteMerchantTiktoks(merchantApiKeyFromScript);
+
+    const numberOfFavourites = data.length;
+    if(numberOfFavourites < 3) {
+      // Menos de 3 no tiene sentido ponerlo, mostramos error en consola
+      colorLog('Necesitas al menos 3 tiktoks marcados como favoritos', "warning");
+      return;
+    }
+
+    const playButtonUrl = 'https://cdn.shopify.com/s/files/1/0582/8408/1175/t/1/assets/play-video-icon_50x.png?v=49291947946775394611663754349';
+    
+    let tiktoksHtml = '';
+    for (var i = 0; i < data.length; i++) {
+      const tiktok = data[i];
+      tiktoksHtml += `
+        <div id="cruwi-tiktok-widget-tiktok">
+          <div id="cruwi-tiktok-widget-tiktok-icon">
+            <img src="${playButtonUrl}">
+          </div>
+          <div class="cruwi-tiktok-widget-tiktok-overlay" id="cruwi-tiktok-widget-tiktok-overlay" data-tiktok-id="${tiktok.tikTokId}"></div>
+          <img id="cruwi-tiktok-widget-tiktok-image" src="${tiktok.coverImageUrl}">
+        </div>
+      `;
+    }
+
+    // Creamos el div principal y su contenido y le inyectamos los tiktoks dinámicos
+    const cruwiTiktokWidget = document.createElement('div');
+    cruwiTiktokWidget.id = "cruwi-tiktok-widget";
+    cruwiTiktokWidget.classList.add('cruwi-tiktok-widget');
+    cruwiTiktokWidget.innerHTML = `
+      <h6 id="cruwi-tiktok-widget-title">Nuestros clientes comparten</h6>
+
+      <div id="${numberOfFavourites < 4 ? 'cruwi-tiktok-widget-wrapper-short' : 'cruwi-tiktok-widget-wrapper'}">
+        ${tiktoksHtml}
+      </div>
+
+      <div id="cruwi-tiktok-widget-modal"></div>
+      <div id="cruwi-tiktok-widget-modal-content">
+        <iframe id="cruwi-tiktok-widget-modal-content-iframe" frameborder="0"></iframe>
+        <button id="cruwi-tiktok-widget-modal-content-button">Seguir comprando</button>
+      </div>
+
+      <h6 id="cruwi-tiktok-widget-subtitle">Powered by CRUWI</h6>
+    `;
+
+    // Metemos el html para poder poner los eventos en cada elemento
+    widgetElement.appendChild(cruwiTiktokWidget);
+
+    const cruwiTiktokModalOverlay = document.getElementById('cruwi-tiktok-widget-modal');
+    const cruwiTiktokModalContent = document.getElementById('cruwi-tiktok-widget-modal-content');
+    const cruwiTiktokModalContentCloseButton = document.getElementById('cruwi-tiktok-widget-modal-content-button');
+    const cruwiTiktokModalContentIframe = document.getElementById('cruwi-tiktok-widget-modal-content-iframe');
+
+    const cruwiTiktoksOverlays = document.querySelectorAll('.cruwi-tiktok-widget-tiktok-overlay');
+    cruwiTiktoksOverlays.forEach(tiktok => {
+      tiktok.addEventListener('click', function handleClick(event) {
+        const tiktokVideoUrl = `https://www.tiktok.com/embed/${event.target.dataset.tiktokId}`;
+        cruwiTiktokModalContentIframe.src = tiktokVideoUrl;
+        cruwiTiktokModalOverlay.style.display = 'block';
+        cruwiTiktokModalContent.style.display = 'flex';
+      });
+    });
+
+    cruwiTiktokModalOverlay.addEventListener('click', function handleClick(e) {
+      cruwiTiktokModalContent.style.display = 'none';
+      cruwiTiktokModalOverlay.style.display = 'none';
+    });
+
+    cruwiTiktokModalContentCloseButton.addEventListener('click', function handleClick(e) {
+      cruwiTiktokModalContent.style.display = 'none';
+      cruwiTiktokModalOverlay.style.display = 'none';
+    });
+
+    injectCruwiStyles();
+  }
+
   // Función que monta la sección completa
   function buildCruwiSectionWidget() {
-    console.log('-- Building Section Widget --');
+    colorLog('-- Building Section Widget --', "info");
 
     // Creamos el modal con un ID
     const sectionWidget = document.createElement('div');
@@ -216,7 +313,130 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
   // Función que monta el widget del checkout
   async function buildCruwiCheckoutWidget() {
-    console.log('-- Building Checkout Widget --');
+    colorLog('-- Building Checkout Widget --', "info");
+
+    // Montamos el widget entero en desarrollo
+    if(isLocalDevelopment && isTestNow) {
+      const cruwiCheckoutMainWidget = document.createElement('div');
+      cruwiCheckoutMainWidget.id = "cruwi-checkout-main-widget";
+      cruwiCheckoutMainWidget.classList.add('cruwi-checkout-main-widget');
+
+      cruwiCheckoutMainWidget.innerHTML = `
+        <div class="cruwi-checkout-main-widget-content">
+
+          <div class="marquee running js-marquee"> 
+            <div class="marquee-inner"> 
+              <span>BE AMBASSADOR</span> 
+            </div>
+          </div>
+
+          <h5 class="cruwi-checkout-main-widget-content-title">
+            Conviértete en embajador/a de Cruwishop
+          </h5>
+
+          <p class="cruwi-checkout-main-widget-content-info">
+            Consigue descuentos exclusivos para ti y tus amigos, gana dinero por conseguir ventas y muchos más beneficios.
+          </p>
+
+          <p class="cruwi-checkout-main-widget-content-info">
+            <label for="instagram">
+              Déjanos tu Instagram para desbloquear todos los beneficios👇🏼
+            </label> 
+          </p>
+
+          <div class="cruwi-checkout-main-widget-content-instagram">
+            <input placeholder="@tu-instagram" class="cruwi-checkout-main-widget-content-instagram-input" type="text" id="cruwi-checkout-main-widget-input-instagram" name="instagram" required minlength="4" maxlength="40">
+            <button id="cruwi-checkout-main-widget-button-instagram" class="cruwi-checkout-main-widget-content-instagram-button">
+              <div class="cruwi-checkout-main-widget-content-instagram-button-content">Desbloquear</div>
+            </button>
+          </div>
+
+          <div class="cruwi-checkout-main-widget-content-spinner-wrapper">
+            <div class="cruwi-checkout-main-widget-content-spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
+
+          <div class="cruwi-checkout-main-widget-content-spinner-success-wrapper"> 
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52"> <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/> <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+          </div>
+
+          <div class="cruwi-checkout-main-widget-content-instagram-success-wrapper">
+            <a id="cruwi-checkout-main-widget-button" target="_blank" href="https://app.cruwi.com?o=t" class="cruwi-checkout-main-widget-content-button">
+              Acceder a mi tienda
+            </a>
+            <p class="cruwi-checkout-main-widget-content-instagram-success-notification">¡Te hemos enviado un correo con toda la info! :)</p>
+          </div>
+
+        </div>
+      `;
+
+      widgetElement.appendChild(cruwiCheckoutMainWidget);
+
+      function cruwiRemoveAtSymbol(text) {
+        if (text[0] === '@') {
+          return text.slice(1);
+        }
+        return text;
+      }
+
+      async function stall(stallTime = 3000) {
+        await new Promise(resolve => setTimeout(resolve, stallTime));
+      }
+
+      const cruwiCheckoutMainWidgetButtonInstagram = document.getElementById('cruwi-checkout-main-widget-button-instagram');
+      const cruwiCheckoutMainWidgetInputInstagram = document.getElementById('cruwi-checkout-main-widget-input-instagram');
+      cruwiCheckoutMainWidgetButtonInstagram.addEventListener('click', async () => {
+        if(cruwiCheckoutMainWidgetInputInstagram.value.length === 0) {
+          alert('El campo instagram no puede estar vacío.')
+        } else {
+          // Ponemos el loader principal
+          const cruwiCheckoutMainWidgetSpinner = document.getElementsByClassName('cruwi-checkout-main-widget-content-spinner-wrapper')[0];
+          cruwiCheckoutMainWidgetSpinner.style.display = 'flex';
+
+          // Hacemos la llamada de instagram
+          await stall(2500);
+
+          // Si todo ok, quitamos el loader y ponemos el check de éxito
+          cruwiCheckoutMainWidgetSpinner.style.display = 'none';
+          const cruwiCheckoutMainWidgetSpinnerSuccess = document.getElementsByClassName('cruwi-checkout-main-widget-content-spinner-success-wrapper')[0];
+          cruwiCheckoutMainWidgetSpinnerSuccess.style.display = 'flex';
+
+          // Simulamos 1500 y quitamos el check
+          await stall(1500);
+          cruwiCheckoutMainWidgetSpinnerSuccess.style.display = 'none';
+
+          // Mostramos los nuevos contenidos (todo: traducciones)
+          const cruwiCheckoutMainWidgetContentTitle = document.getElementsByClassName('cruwi-checkout-main-widget-content-title')[0];
+          cruwiCheckoutMainWidgetContentTitle.innerHTML = '❤️‍🔥 Ya eres parte de nuestro equipo de embajadores ❤️‍🔥';
+
+          const cruwiCheckoutMainWidgetContentInfo = document.getElementsByClassName('cruwi-checkout-main-widget-content-info')[0];
+          const cruwiCheckoutMainWidgetContentInfo2 = document.getElementsByClassName('cruwi-checkout-main-widget-content-info')[1];
+          cruwiCheckoutMainWidgetContentInfo2.style.display = 'none';
+          cruwiCheckoutMainWidgetContentInfo.innerHTML = 'Para que veas que vamos en serio, te hemos creado una tienda con descuentos para ti y tus amigos. Accede a ella para descubrir cómo funciona.';
+
+          const cruwiCheckoutMainWidgetContentInstagram = document.getElementsByClassName('cruwi-checkout-main-widget-content-instagram')[0];
+          cruwiCheckoutMainWidgetContentInstagram.style.display = 'none';
+
+          const cruwiCheckoutMainWidgetContentInstagramSuccess = document.getElementsByClassName('cruwi-checkout-main-widget-content-instagram-success-wrapper')[0];
+          cruwiCheckoutMainWidgetContentInstagramSuccess.style.display = 'block';
+        }
+      });
+
+      loadCruwiCustomFont();
+      injectCruwiStyles();
+
+      // Marquee logic
+      document.querySelectorAll('.js-marquee').forEach(function(e) {
+        var letter = e.querySelector('span');
+        for (counter = 1; counter <= 3; ++counter) {
+          var clone = letter.cloneNode(true);
+          letter.after(clone);
+        }
+      });
+    }
 
     // Comprobamos que exista el objeto Shopify
     if(!window.Shopify) return;
@@ -250,18 +470,23 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       // Textos e idioma del widget
       let checkoutWidgetTitleText = checkoutWidgetTitle;
       let checkoutWidgetContentText = checkoutWidgetText;
-      let checkoutWidgetRotatingText1 = "GANA DINERO";
+      let checkoutWidgetRotatingText1 = "BE AMBASSADOR";
       let checkoutWidgetButton = "ACCEDE A TU TIENDA";
+      let checkoutWidgetInstagramText = "Déjanos tu Instagram para desbloquear todos los beneficios👇🏼";
+      let checkoutWidgetInstagramButton = "Desbloquear";
+      let checkoutWidgetInstagramTextSuccess = "Te hemos enviado un correo con toda la info y tus primeros beneficios :)";
 
       let isEnglish = false;
       if(preferredLanguage.indexOf('es') === -1) {
         isEnglish = true;
         checkoutWidgetTitleText = "Earn money sharing your purchase";
         checkoutWidgetContentText = `With your purchase you have unlocked your own ${merchantNameFromScript} store. Share it with friends so they can shop with a discount. For every purchase they make you will earn money directly to your account.`;
-        checkoutWidgetRotatingText1 = "EARN MONEY";
+        checkoutWidgetRotatingText1 = "BE AMBASSADOR";
         checkoutWidgetButton = "ACCESS YOUR STORE";
+        checkoutWidgetInstagramText = "Leave us your Instagram to unlock all the benefits👇🏼";
+        checkoutWidgetInstagramButton = "Unlock";
+        checkoutWidgetInstagramTextSuccess = "We have sent you an email with all the info and your first benefits :)";
       }
-      console.log({isEnglish});
 
       // Si son todos los productos, no buscamos matches
       let matchesFromLineItems = [];
@@ -310,7 +535,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       }
 
       // Mandamos los datos del pedido y cliente actuales
-      const { data: { shopData: { shortUrl, url } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, isCruwiPartnerDiscount, shopRawUrl, campaigns);
+      const { data: { shopData: { shortUrl, url, orderId } } } = await fetchPostClientData(Shopify.checkout, matchesFromLineItems, isCruwiDiscount, isCruwiPartnerDiscount, shopRawUrl, campaigns);
 
       // Creamos el Div principal del checkout (izquierda)
       const cruwiCheckoutMainWidget = document.createElement('div');
@@ -319,39 +544,120 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
       cruwiCheckoutMainWidget.innerHTML = `
         <div class="cruwi-checkout-main-widget-content">
+
           <div class="marquee running js-marquee"> 
             <div class="marquee-inner"> 
               <span>${checkoutWidgetRotatingText1}</span> 
             </div>
           </div>
+
           <h5 class="cruwi-checkout-main-widget-content-title">
             ${checkoutWidgetTitleText}
           </h5>
+
           <p class="cruwi-checkout-main-widget-content-info">
             ${checkoutWidgetContentText}
           </p>
-          <a id="cruwi-checkout-main-widget-button" target="_blank" href="${url}?o=t" class="cruwi-checkout-main-widget-content-button">
-            ${checkoutWidgetButton}
-          </a>
+
+          <p class="cruwi-checkout-main-widget-content-info">
+            <label for="instagram">
+              ${checkoutWidgetInstagramText}
+            </label> 
+          </p>
+
+          <div class="cruwi-checkout-main-widget-content-instagram">
+            <input placeholder="@tu-instagram" class="cruwi-checkout-main-widget-content-instagram-input" type="text" id="cruwi-checkout-main-widget-input-instagram" name="instagram" required minlength="4" maxlength="40">
+            <button id="cruwi-checkout-main-widget-button-instagram" class="cruwi-checkout-main-widget-content-instagram-button">
+              <div class="cruwi-checkout-main-widget-content-instagram-button-content">
+                ${checkoutWidgetInstagramButton}
+              </div>
+            </button>
+          </div>
+
+          <div class="cruwi-checkout-main-widget-content-spinner-wrapper">
+            <div class="cruwi-checkout-main-widget-content-spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+          </div>
+
+          <div class="cruwi-checkout-main-widget-content-spinner-success-wrapper"> 
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+              <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+          </div>
+
+          <div class="cruwi-checkout-main-widget-content-instagram-success-wrapper">
+            <a id="cruwi-checkout-main-widget-button" target="_blank" href="${url}?o=t" class="cruwi-checkout-main-widget-content-button">
+              Acceder a mi tienda
+            </a>
+            <p class="cruwi-checkout-main-widget-content-instagram-success-notification">¡Te hemos enviado un correo con toda la info! :)</p>
+          </div>
+
         </div>
       `;
 
       widgetElement.appendChild(cruwiCheckoutMainWidget);
 
-      loadCruwiCustomFont();
-      injectCruwiStyles();
+      async function stall(stallTime = 3000) {
+        await new Promise(resolve => setTimeout(resolve, stallTime));
+      }
 
-      // Marquee logic
-      document.querySelectorAll('.js-marquee').forEach(function(e) {
-        var letter = e.querySelector('span');
-        for (counter = 1; counter <= 3; ++counter) {
-          var clone = letter.cloneNode(true);
-          letter.after(clone);
+      // *** New Instagram feature *** //
+      function cruwiRemoveAtSymbol(text) {
+        if (text[0] === '@') {
+          return text.slice(1);
+        }
+        return text;
+      }
+
+      const cruwiCheckoutMainWidgetButtonInstagram = document.getElementById('cruwi-checkout-main-widget-button-instagram');
+      const cruwiCheckoutMainWidgetInputInstagram = document.getElementById('cruwi-checkout-main-widget-input-instagram');
+
+      cruwiCheckoutMainWidgetButtonInstagram.addEventListener('click', async () => {
+        const userInstagram = cruwiCheckoutMainWidgetInputInstagram.value;
+        if(userInstagram.length === 0) {
+          alert('El campo instagram no puede estar vacío.');
+        } else {
+          // Ponemos el loader principal
+          const cruwiCheckoutMainWidgetSpinner = document.getElementsByClassName('cruwi-checkout-main-widget-content-spinner-wrapper')[0];
+          cruwiCheckoutMainWidgetSpinner.style.display = 'flex';
+
+          // Actualizar la shop con el instagram, asociarlo a ella
+          const { data } = await fetchPostClientInstagram(orderId, cruwiRemoveAtSymbol(userInstagram));
+          if(data?.savedShop) {
+            colorLog('Instagram insertado en la tienda correctamente', "info");
+
+            // Quitamos el loader y ponemos el check de éxito
+            cruwiCheckoutMainWidgetSpinner.style.display = 'none';
+            const cruwiCheckoutMainWidgetSpinnerSuccess = document.getElementsByClassName('cruwi-checkout-main-widget-content-spinner-success-wrapper')[0];
+            cruwiCheckoutMainWidgetSpinnerSuccess.style.display = 'flex';
+
+            // Simulamos 1500 y quitamos el check
+            await stall(1800);
+            cruwiCheckoutMainWidgetSpinnerSuccess.style.display = 'none';
+
+            // Mostramos los nuevos contenidos
+            const cruwiCheckoutMainWidgetContentTitle = document.getElementsByClassName('cruwi-checkout-main-widget-content-title')[0];
+            cruwiCheckoutMainWidgetContentTitle.innerHTML = isEnglish ? '❤️‍🔥 You are already part of our team of ambassadors ❤️‍🔥' : '❤️‍🔥 Ya eres parte de nuestro equipo de embajadores ❤️‍🔥';
+
+            const cruwiCheckoutMainWidgetContentInfo = document.getElementsByClassName('cruwi-checkout-main-widget-content-info')[0];
+            const cruwiCheckoutMainWidgetContentInfo2 = document.getElementsByClassName('cruwi-checkout-main-widget-content-info')[1];
+            cruwiCheckoutMainWidgetContentInfo2.style.display = 'none';
+            cruwiCheckoutMainWidgetContentInfo.innerHTML = isEnglish ? 'Here is your first benefit, we have created a store with discounts for you and your friends. Click the button to find out how it works.' : 'Para que veas que vamos en serio, te hemos creado una tienda con descuentos para ti y tus amigos. Accede a ella para descubrir cómo funciona.';
+
+            const cruwiCheckoutMainWidgetContentInstagram = document.getElementsByClassName('cruwi-checkout-main-widget-content-instagram')[0];
+            cruwiCheckoutMainWidgetContentInstagram.style.display = 'none';
+
+            const cruwiCheckoutMainWidgetContentInstagramSuccess = document.getElementsByClassName('cruwi-checkout-main-widget-content-instagram-success-wrapper')[0];
+            cruwiCheckoutMainWidgetContentInstagramSuccess.style.display = 'block';
+          }
         }
       });
 
       const cruwiCheckoutMainWidgetButton = document.getElementById('cruwi-checkout-main-widget-button');
-
       // Click en el botón para enviar evento a Amplitude
       cruwiCheckoutMainWidgetButton.addEventListener('click', () => {
         window.amplitude && amplitude.track('checkout_widget_clicked', {
@@ -362,6 +668,19 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       // Mandamos evento a Amplitude de widget cargado
       window.amplitude && amplitude.track('checkout_widget_viewed', {
         merchantName: merchantNameFromScript,
+      });
+
+      // Cargamos la tipografía y los estilos
+      loadCruwiCustomFont();
+      injectCruwiStyles();
+
+      // Marquee logic
+      document.querySelectorAll('.js-marquee').forEach(function(e) {
+        var letter = e.querySelector('span');
+        for (counter = 1; counter <= 3; ++counter) {
+          var clone = letter.cloneNode(true);
+          letter.after(clone);
+        }
       });
 
     } catch (error) {
@@ -828,12 +1147,13 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       #cruwi-checkout-main-widget {
         border: 1px solid #d9d9d9;
         border-radius: 8px;
-        border-top: 3px solid #000;
         margin-top: 40px;
       }
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content {
         text-align: center;
+        position: relative;
+        padding-bottom: 16px;
       }
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-title {
@@ -860,18 +1180,18 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
 
       #cruwi-checkout-main-widget .cruwi-checkout-main-widget-content-button {
         padding: 0;
-        margin: 20px auto;
+        margin: 0 auto;
         box-shadow: inset 0px -1px 0px 0px #571a57;
         background-color: #fffff2;
         border-radius: 8px;
         border: 2px solid #080008;
-        display: inline-block;
+        display: block;
         cursor: pointer;
         color: #000000;
         font-family: 'DM Sans', sans-serif !important;
         font-size: 16px !important;
         font-weight: bold !important;
-        padding: 12px 40px;
+        padding: 8px 40px;
         text-decoration: none;
       }
 
@@ -887,6 +1207,8 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         overflow: hidden;
         border-top-left-radius: 5px;
         border-top-right-radius: 5px;
+        border-top: 5px solid black;
+        border-bottom: 5px solid black;
       }
 
       .marquee.running .marquee-inner {
@@ -919,6 +1241,179 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
           transform: translateX(var(--move-final));
         }
       }
+
+      .cruwi-checkout-main-widget-content-instagram {
+        margin: 10px auto 0px auto;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        font-family: 'DM Sans', sans-serif !important;
+        height: 42px !important;
+      }
+
+      .cruwi-checkout-main-widget-content-instagram-success-wrapper {
+        padding: 16px;
+        display: none;
+      }
+
+      .cruwi-checkout-main-widget-content-instagram-success {
+        border-radius: 8px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.05);
+        font-family: DM Sans !important;;
+        font-size: 12px !important;;
+        color: black !important;
+        font-weight: 500 !important;
+        line-height: 16px !important;;
+        letter-spacing: 0em;
+        text-align: center;
+      }
+
+      .cruwi-checkout-main-widget-content-instagram-input {
+        border-radius: 8px;
+        padding: 0px 8px 0px 8px;
+        border: 1px solid #000000;
+        text-align: left;
+        font-size: 14px;
+        width: 100%;
+        height: 100% !important;
+      }
+
+      .cruwi-checkout-main-widget-content-instagram-input::placeholder {
+        font-size: 14px;
+      }
+
+      .cruwi-checkout-main-widget-content-instagram-button {
+        border-radius: 8px;
+        padding: 4px 12px 4px 12px;
+        background-color: #000000;
+        color: white;
+        margin-left: 5px;
+        font-size: 14px;
+        min-width: 108px;
+        height: 42px !important;
+      }
+
+      @keyframes loading {
+        0% { 
+          transform: rotate(0); 
+        }
+        100% { 
+          transform: rotate(360deg);
+        }
+      }
+
+      .cruwi-rotate {
+        animation: loading 3s linear infinite;
+      }
+
+      .cruwi-checkout-main-widget-content-instagram-success-notification {
+        margin: 0;
+        padding: 0;
+        margin-top: 4px;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+        text-align: center !important;
+        color: black !important;
+      }
+
+      .cruwi-checkout-main-widget-content-spinner-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #fffffff5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        display: none;
+      }
+
+      .cruwi-checkout-main-widget-content-spinner {
+        text-align: center;
+      }
+      
+      .cruwi-checkout-main-widget-content-spinner > div {
+        width: 18px;
+        height: 18px;
+        background-color: #000;
+        border-radius: 100%;
+        display: inline-block;
+        -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+        animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+      }
+      
+      .cruwi-checkout-main-widget-content-spinner .bounce1 {
+        -webkit-animation-delay: -0.32s;
+        animation-delay: -0.32s;
+      }
+      
+      .cruwi-checkout-main-widget-content-spinner .bounce2 {
+        -webkit-animation-delay: -0.16s;
+        animation-delay: -0.16s;
+      }
+      
+      @-webkit-keyframes sk-bouncedelay {
+        0%, 80%, 100% { -webkit-transform: scale(0) }
+        40% { -webkit-transform: scale(1.0) }
+      }
+      
+      @keyframes sk-bouncedelay {
+        0%, 80%, 100% { 
+          -webkit-transform: scale(0);
+          transform: scale(0);
+        } 40% { 
+          -webkit-transform: scale(1.0);
+          transform: scale(1.0);
+        }
+      }
+
+      .cruwi-checkout-main-widget-content-spinner-success-wrapper { 
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #fffffff5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        display: none;
+      }
+      
+      .checkmark__circle { 
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #000000;
+        fill: none;
+        animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards
+      }
+
+      .checkmark { 
+        width: 56px; 
+        height: 56px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #000;
+        animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both
+      }
+      
+      .checkmark__check { 
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards
+      }
+      
+      @keyframes stroke{100%{stroke-dashoffset: 0}}@keyframes scale{0%, 100%{transform: none}50%{transform: scale3d(1.1, 1.1, 1)}}@keyframes fill{100%{box-shadow: inset 0px 0px 0px 30px #000}}
+
 
       #cruwiSection {
         background-color: white;
@@ -1013,6 +1508,156 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
         }
       }
 
+      div#cruwi-tiktok-widget {
+        margin-top: 50px;
+        margin-bottom: 50px;
+      }
+
+      #cruwi-tiktok-widget  #cruwi-tiktok-widget-title {
+        padding: 0;
+        margin: 0;
+        text-align: center;
+        padding: 20px 0;
+        font-size: 25px !important;
+        font-family: inherit !important;
+        line-height: normal;
+        color: black !important;
+        font-weight: bold !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-subtitle {
+        padding: 0;
+        margin: 0;
+        text-align: center;
+        padding: 20px 0;
+        font-size: 12px !important;
+        font-family: inherit !important;
+        line-height: normal !important;
+        color: black !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-wrapper {
+        display: flex;
+        justify-content: space-between;
+        max-width: 1000px;
+        margin: 0 auto;
+        overflow-x: auto;
+        padding: 20px 10px 20px 10px;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-wrapper-short {
+        display: flex;
+        justify-content: space-between;
+        max-width: 700px;
+        margin: 0 auto;
+        overflow-x: auto;
+        padding: 20px 10px 20px 10px;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-tiktok {
+        min-width: 170px;
+        margin-right: 10px;
+        border-radius: 10px;
+        max-width: 170px;
+        position: relative;
+        cursor: pointer;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-tiktok-icon {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        z-index: 10 !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        display: flex !important;
+        align-content: center !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-tiktok-icon img {
+        max-width: 18px !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-tiktok-overlay {
+        position: absolute !important;
+        width: 100% !important;
+        height: 100% !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background-color: rgba(0,0,0,.25) !important;
+        z-index: 2 !important;
+        display: block !important;
+        border-radius: 10px !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-tiktok:last-child {
+        margin-right: 0 !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-tiktok-image {
+        border-radius: 10px !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        min-width: 170px !important;
+      }
+
+      /* Modal tiktok */
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 214748;
+        display: none;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-modal:empty {
+        display: none;
+      }
+      
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-modal-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 21474836;
+        background-color: white;
+        padding: 6px;
+        border-radius: 10px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        display: none;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-modal-content-iframe {
+        height: 563px !important;
+        width: 325px !important;
+        border-radius: 10px !important;
+      }
+
+      #cruwi-tiktok-widget #cruwi-tiktok-widget-modal-content-button {
+        background: #ededed;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: none;
+        font-size: 14px;
+        width: 100%;
+        margin: 5px auto 0 auto;
+      }
+      
+      @media (max-width: 600px) {
+        #cruwi-tiktok-widget #cruwi-tiktok-widget-modal-content {
+          /* width: 90%; */
+        }
+      }
+
     `
   }
 
@@ -1027,7 +1672,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/merchants/public/getMerchantAndCampaignData`, { 
       method: 'POST',
       body: JSON.stringify(data),
-      headers:{
+      headers: {
         'Content-Type': 'application/json'
       }
     });
@@ -1059,7 +1704,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/clients`, { 
       method: 'POST',
       body: JSON.stringify(dataToSend),
-      headers:{
+      headers: {
         'Content-Type': 'application/json'
       }
     });
@@ -1067,6 +1712,53 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     if (resp.status === 200) {
       const cruwiShopData = await resp.json();
       return cruwiShopData;
+
+    } else {
+      throw Error('No se pudo pedir los datos del merchant');
+    }
+  }
+
+  // Envía el instagram y lo asocia a la tienda del cliente
+  async function fetchPostClientInstagram(orderId, instagram) {
+
+    const dataToSend = {
+      data: {
+        orderId,
+        instagram
+      }
+    }
+
+    const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/clients/instagram`, { 
+      method: 'POST',
+      body: JSON.stringify(dataToSend),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (resp.status === 200) {
+      const cruwiShopData = await resp.json();
+      return cruwiShopData;
+
+    } else {
+      throw Error('No se pudo pedir los datos del merchant');
+    }
+  }
+
+  // Trae los TikToks marcados como favoritos del merchant
+  async function fetchGetFavouriteMerchantTiktoks(merchantApiKeyFromScript) {
+
+    const resp = await fetch(`${CRUWI_BASE_API_URL}/v1/api/merchants/public/videos?favourite=true`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `${merchantApiKeyFromScript}`,
+      }
+    })
+
+    if (resp.status === 200) {
+      const merchantTiktokData = await resp.json();
+      return merchantTiktokData;
 
     } else {
       throw Error('No se pudo pedir los datos del merchant');
