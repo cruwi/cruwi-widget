@@ -459,7 +459,7 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
     try {
 
       // Pedimos los datos de la tienda y de la campaña que tenga activa
-      const { data: { brandName, isActive, logoUrl, merchantUrl, campaigns, checkoutWidgetTitle, checkoutWidgetText } } = await fetchGetMerchantAndCampaignData(shopRawUrl);
+      const { data: { brandName, isActive, hasShadowWidget, logoUrl, merchantUrl, campaigns, checkoutWidgetTitle, checkoutWidgetText } } = await fetchGetMerchantAndCampaignData(shopRawUrl);
 
       // Comprobamos que está activo el merchant
       if(!isActive) return;
@@ -600,6 +600,11 @@ const CRUWI_BASE_API_URL = "https://app.cruwi.com";
       `;
 
       widgetElement.appendChild(cruwiCheckoutMainWidget);
+
+      // No mostramos el widget si la marca no quiere (Ej. GoatedLink)
+      if(hasShadowWidget) {
+        cruwiCheckoutMainWidget.style.display = 'none';
+      }
 
       async function stall(stallTime = 3000) {
         await new Promise(resolve => setTimeout(resolve, stallTime));
